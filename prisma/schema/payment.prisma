@@ -1,0 +1,19 @@
+model Payment {
+    id            String        @id @default(uuid())
+    userId        String
+    amount        Int
+    currency      String        @default("BDT")
+    status        PaymentStatus @default(PENDING)
+    description   String?
+    transactionId String?       @unique
+    method        String? // sslcommerz / stripe
+    planType      String?
+    paymentFor    String? // subscription / verified-badge
+
+    user User @relation(fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("payments")
+}

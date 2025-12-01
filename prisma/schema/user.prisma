@@ -1,0 +1,50 @@
+model User {
+    id                 String  @id @default(uuid())
+    name               String
+    email              String  @unique
+    password           String
+    needPasswordChange Boolean @default(true)
+
+    role   UserRole   @default(USER)
+    status UserStatus @default(ACTIVE)
+
+    profileImage String?
+    bio          String?
+    age          Int?
+    gender       Gender?
+
+    country         String?
+    city            String?
+    currentLocation String?
+
+    interests        String[] // Travel Interests
+    visitedCountries String[] // NEW — Requirement based
+    budgetRange      String? // "Low", "Medium", "High"
+    isVerified       Boolean  @default(false) // NEW — Verified Badge after subscription
+
+    travelPlans  TravelPlan[]
+    reviews      Review[]
+    payments     Payment[]
+    joinRequests TripJoinRequest[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    admin     Admin?
+
+    @@map("users")
+}
+
+model Admin {
+    id            String   @id @default(uuid())
+    name          String
+    email         String   @unique
+    profilePhoto  String?
+    contactNumber String
+    isDeleted     Boolean  @default(false)
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    user User @relation(fields: [email], references: [email])
+
+    @@map("admins")
+}

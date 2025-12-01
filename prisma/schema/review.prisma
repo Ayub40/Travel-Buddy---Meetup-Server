@@ -1,0 +1,15 @@
+model Review {
+    id           String  @id @default(uuid())
+    userId       String
+    travelPlanId String
+    rating       Int // 1–5
+    comment      String?
+
+    user       User       @relation(fields: [userId], references: [id])
+    travelPlan TravelPlan @relation(fields: [travelPlanId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("reviews")
+}

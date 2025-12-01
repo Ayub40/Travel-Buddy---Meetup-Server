@@ -1,0 +1,38 @@
+model TravelPlan {
+    id          String     @id @default(uuid())
+    userId      String
+    title       String
+    destination String
+    country     String
+    startDate   DateTime
+    endDate     DateTime
+    budget      Int?
+    description String?
+    travelType  TravelType // Solo, Group, Backpack
+    photos      String[] // image gallery
+    visibility  Boolean    @default(true) // NEW — for matching
+
+    user         User              @relation(fields: [userId], references: [id])
+    reviews      Review[]
+    joinRequests TripJoinRequest[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@map("travel_plans")
+}
+
+model TripJoinRequest {
+    id           String     @id @default(uuid())
+    userId       String
+    travelPlanId String
+    message      String?
+    status       JoinStatus @default(PENDING)
+
+    user       User       @relation(fields: [userId], references: [id])
+    travelPlan TravelPlan @relation(fields: [travelPlanId], references: [id])
+
+    createdAt DateTime @default(now())
+
+    @@map("trip_join_requests")
+}
