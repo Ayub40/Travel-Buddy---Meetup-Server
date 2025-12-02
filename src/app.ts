@@ -20,7 +20,8 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', (req: Request, res: Response) => {
     res.send({
         message: "🧳 Travel Buddy & Meetup Server is running..",
-        environment: config.node_env,
+        // environment: config.node_env,
+        environment: config.env,
         uptime: process.uptime().toFixed(2) + " sec",
         timeStamp: new Date().toISOString()
     })
