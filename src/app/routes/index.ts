@@ -1,14 +1,27 @@
 import express from 'express';
+import { userRoutes } from '../modules/users/user.routes';
+import { AuthRoutes } from '../modules/auth/auth.routes';
+import { apiLimiter } from '../middlewares/rateLimiter';
 
 
 const router = express.Router();
 
+router.use(apiLimiter)
+
 const moduleRoutes = [
     {
-        path: '/',
-        route: router
+        path: '/user',
+        route: userRoutes
+    },
+    {
+        path: '/auth',
+        route: AuthRoutes
     }
+
 ];
+
+// console.log("User routes loaded");
+
 
 moduleRoutes.forEach(route => router.use(route.path, route.route))
 

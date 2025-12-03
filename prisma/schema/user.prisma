@@ -1,6 +1,6 @@
 model User {
     id                 String  @id @default(uuid())
-    name               String
+    name               String?
     email              String  @unique
     password           String
     needPasswordChange Boolean @default(true)
@@ -36,10 +36,10 @@ model User {
 
 model Admin {
     id            String   @id @default(uuid())
-    name          String
+    name          String?
     email         String   @unique
     profilePhoto  String?
-    contactNumber String
+    contactNumber String?
     isDeleted     Boolean  @default(false)
     createdAt     DateTime @default(now())
     updatedAt     DateTime @updatedAt

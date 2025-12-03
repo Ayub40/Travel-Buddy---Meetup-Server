@@ -1,7 +1,7 @@
 export type ICloudinaryResponse = {
-    asset_id: string;
+    asset_id: string
     public_id: string
-    version: number;
+    version: number
     version_id: string
     signature: string
     width: number
