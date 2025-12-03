@@ -1,12 +1,12 @@
 import express from 'express';
 import { userRoutes } from '../modules/users/user.routes';
 import { AuthRoutes } from '../modules/auth/auth.routes';
-import { apiLimiter } from '../middlewares/rateLimiter';
+// import { apiLimiter } from '../middlewares/rateLimiter';
 
 
 const router = express.Router();
 
-router.use(apiLimiter)
+// router.use(apiLimiter)
 
 const moduleRoutes = [
     {
