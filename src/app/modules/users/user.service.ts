@@ -233,78 +233,6 @@ const getMyProfile = async (user: IAuthUser) => {
     return { ...userInfo, ...profileInfo };
 };
 
-// export { getMyProfile };
-
-// const getMyProfile = async (user: IAuthUser) => {
-//     const userInfo = await prisma.user.findUniqueOrThrow({
-//         where: {
-//             email: user?.email,
-//             status: UserStatus.ACTIVE,
-//         },
-//         select: {
-//             id: true,
-//             email: true,
-//             needPasswordChange: true,
-//             role: true,
-//             status: true,
-//         },
-//     });
-
-//     let profileInfo;
-
-//     if (userInfo.role === UserRole.SUPER_ADMIN) {
-//         profileInfo = await prisma.admin.findUnique({
-//             where: {
-//                 email: userInfo.email,
-//             },
-//             select: {
-//                 id: true,
-//                 name: true,
-//                 email: true,
-//                 profilePhoto: true,
-//                 contactNumber: true,
-//                 isDeleted: true,
-//                 createdAt: true,
-//                 updatedAt: true,
-//             },
-//         });
-//     } else if (userInfo.role === UserRole.ADMIN) {
-//         profileInfo = await prisma.admin.findUnique({
-//             where: {
-//                 email: userInfo.email,
-//             },
-//             select: {
-//                 id: true,
-//                 name: true,
-//                 email: true,
-//                 profilePhoto: true,
-//                 contactNumber: true,
-//                 isDeleted: true,
-//                 createdAt: true,
-//                 updatedAt: true,
-//             },
-//         });
-//     } else if (userInfo.role === UserRole.USER) {
-//         profileInfo = await prisma.admin.findUnique({
-//             where: {
-//                 email: userInfo.email,
-//             },
-//             select: {
-//                 id: true,
-//                 name: true,
-//                 email: true,
-//                 profilePhoto: true,
-//                 contactNumber: true,
-//                 isDeleted: true,
-//                 createdAt: true,
-//                 updatedAt: true,
-//             },
-//         });
-//     }
-//     return { ...userInfo, ...profileInfo };
-// };
-
-
 const updateMyProfile = async (user: IAuthUser, req: Request) => {
     const userInfo = await prisma.user.findUniqueOrThrow({
         where: {
@@ -348,7 +276,6 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
 
     return { ...profileInfo };
 }
-
 
 export const userService = {
     createAdmin,

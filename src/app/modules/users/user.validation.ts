@@ -67,23 +67,6 @@ const createUsers = z.object({
     })
 })
 
-
-// const createUserBase = z.object({
-//     password: z.string(),
-//     name: z.string(),
-//     email: z.string().email(),
-// });
-
-// export const createTraveler = createUserBase.extend({
-//     age: z.number().optional(),
-//     gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.OTHER]).optional(),
-//     country: z.string().optional(),
-//     city: z.string().optional(),
-//     interests: z.array(z.string()).optional(),
-//     visitedCountries: z.array(z.string()).optional(),
-//     budgetRange: z.enum(["Low", "Medium", "High"]).optional(),
-// });
-
 const updateStatus = z.object({
     body: z.object({
         status: z.enum([UserStatus.ACTIVE, UserStatus.BLOCKED, UserStatus.DELETED]),
