@@ -85,9 +85,66 @@ const deleteReview = async (reviewId: string, userEmail: string) => {
     });
 };
 
+// Get Reviews by Plan with average rating
+const getReviewsByPlan = async (travelPlanId: string) => {
+    const reviews = await prisma.review.findMany({
+        where: { travelPlanId },
+        include: {
+            user: {
+                select: {
+                    email: true,
+                    name: true,
+                    profileImage: true,
+                },
+            },
+        },
+        orderBy: { createdAt: "desc" },
+    });
+
+    const avgRating =
+        reviews.length > 0
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+            : null;
+
+    return { reviews, averageRating: avgRating };
+};
+
+// Get Reviews by User with average rating
+const getReviewsByUser = async (userEmail: string) => {
+    const user = await prisma.user.findUniqueOrThrow({
+        where: { email: userEmail },
+    });
+
+    const reviews = await prisma.review.findMany({
+        where: { userId: user.id },
+        include: {
+            travelPlan: {
+                select: {
+                    id: true,
+                    title: true,
+                    destination: true,
+                    startDate: true,
+                    endDate: true,
+                },
+            },
+        },
+        orderBy: { createdAt: "desc" },
+    });
+
+    const avgRating =
+        reviews.length > 0
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+            : null;
+
+    return { reviews, averageRating: avgRating };
+};
+
+
 
 export const reviewService = {
     createReview,
     updateReview,
     deleteReview,
+    getReviewsByPlan,
+    getReviewsByUser,
 };

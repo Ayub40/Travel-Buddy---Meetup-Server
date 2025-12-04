@@ -33,6 +33,12 @@ router.delete(
     reviewController.deleteReview
 );
 
+// Get reviews for a travel plan (with average rating)
+router.get("/plan/:travelPlanId", reviewController.getReviewsByPlan);
+
+// Get logged-in user reviews (with average rating)
+router.get("/me", auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN), reviewController.getReviewsByUser);
+
 
 
 export const ReviewRoutes = router;
