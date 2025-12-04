@@ -174,64 +174,155 @@ const changeProfileStatus = async (id: string, status: UserRole) => {
     return updateUserStatus;
 };
 
-const getMyProfile = async (user: IAuthUser) => {
+// const getMyProfile = async (user: IAuthUser) => {
 
-    if (!user) throw new Error("User not found");
+//     if (!user) throw new Error("User not found");
 
-    const userInfo = await prisma.user.findUniqueOrThrow({
+//     const userInfo = await prisma.user.findUniqueOrThrow({
+//         where: { email: user.email },
+//         select: {
+//             id: true,
+//             email: true,
+//             needPasswordChange: true,
+//             role: true,
+//             status: true,
+//         }
+//     });
+
+//     let profileInfo: any = {};
+
+
+//     if (userInfo.role === UserRole.SUPER_ADMIN || userInfo.role === UserRole.ADMIN) {
+//         profileInfo = await prisma.admin.findUnique({
+//             where: { email: userInfo.email },
+//             select: {
+//                 id: true,
+//                 name: true,
+//                 email: true,
+//                 profilePhoto: true,
+//                 contactNumber: true,
+//                 isDeleted: true,
+//                 createdAt: true,
+//                 updatedAt: true,
+//             }
+//         });
+//     } else if (userInfo.role === UserRole.USER) {
+//         profileInfo = await prisma.user.findUnique({
+//             where: { email: userInfo.email },
+//             select: {
+//                 id: true,
+//                 name: true,
+//                 email: true,
+//                 profileImage: true,
+//                 bio: true,
+//                 age: true,
+//                 gender: true,
+//                 country: true,
+//                 city: true,
+//                 currentLocation: true,
+//                 interests: true,
+//                 visitedCountries: true,
+//                 budgetRange: true,
+//                 isVerified: true,
+//                 createdAt: true,
+//                 updatedAt: true,
+//             }
+//         });
+//     }
+
+//     return { ...userInfo, ...profileInfo };
+// };
+
+const getMe = async (user: any) => {
+    if (!user?.email) {
+        throw new Error("Invalid user!");
+    }
+
+    const userData = await prisma.user.findUniqueOrThrow({
         where: { email: user.email },
         select: {
             id: true,
+            name: true,
             email: true,
-            needPasswordChange: true,
             role: true,
             status: true,
+            needPasswordChange: true,
+
+            profileImage: true,
+            bio: true,
+            age: true,
+            gender: true,
+
+            country: true,
+            city: true,
+            currentLocation: true,
+
+            interests: true,
+            visitedCountries: true,
+            budgetRange: true,
+            isVerified: true,
+
+            createdAt: true,
+            updatedAt: true,
+
+            // Travel Plans Created by User
+            travelPlans: {
+                select: {
+                    id: true,
+                    title: true,
+                    destination: true,
+                    country: true,
+                    startDate: true,
+                    endDate: true,
+                    budget: true,
+                    travelType: true,
+                    visibility: true,
+                    photos: true,
+                    createdAt: true,
+                    updatedAt: true,
+                }
+            },
+
+            // Reviews Given by User
+            reviews: {
+                select: {
+                    id: true,
+                    travelPlanId: true,
+                    rating: true,
+                    comment: true,
+                    createdAt: true
+                }
+            },
+
+            // Payments made by user
+            payments: {
+                select: {
+                    id: true,
+                    amount: true,
+                    currency: true,
+                    status: true,
+                    paymentFor: true,
+                    planType: true,
+                    method: true,
+                    createdAt: true
+                }
+            },
+
+            // Join Requests made by user
+            joinRequests: {
+                select: {
+                    id: true,
+                    travelPlanId: true,
+                    status: true,
+                    createdAt: true,
+                }
+            }
         }
     });
 
-    let profileInfo: any = {};
-
-
-    if (userInfo.role === UserRole.SUPER_ADMIN || userInfo.role === UserRole.ADMIN) {
-        profileInfo = await prisma.admin.findUnique({
-            where: { email: userInfo.email },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                profilePhoto: true,
-                contactNumber: true,
-                isDeleted: true,
-                createdAt: true,
-                updatedAt: true,
-            }
-        });
-    } else if (userInfo.role === UserRole.USER) {
-        profileInfo = await prisma.user.findUnique({
-            where: { email: userInfo.email },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                profileImage: true,
-                bio: true,
-                age: true,
-                gender: true,
-                country: true,
-                city: true,
-                currentLocation: true,
-                interests: true,
-                visitedCountries: true,
-                budgetRange: true,
-                isVerified: true,
-                createdAt: true,
-                updatedAt: true,
-            }
-        });
-    }
-
-    return { ...userInfo, ...profileInfo };
+    return userData;
 };
+
 
 const updateMyProfile = async (user: IAuthUser, req: Request) => {
     const userInfo = await prisma.user.findUniqueOrThrow({
@@ -282,6 +373,7 @@ export const userService = {
     createUser,
     getAllFromDB,
     changeProfileStatus,
-    getMyProfile,
+    // getMyProfile,
+    getMe,
     updateMyProfile
 }

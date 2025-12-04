@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post(
     '/',
-    auth(UserRole.USER),
+    auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
     fileUploader.upload.array('photos', 5),
     async (req: Request & { user?: any }, res: Response, next: NextFunction) => {
         // check if travelPlan is string
