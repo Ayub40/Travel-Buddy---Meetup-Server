@@ -2,6 +2,7 @@ import { prisma } from "../../shared/prisma";
 import { IAuthUser } from "../../interfaces/common";
 import { fileUploader } from "../../../helpers/fileUploader";
 import { paginationHelper } from "../../../helpers/paginationHelper";
+import { travelPlanFilterableFields, travelPlanSearchableFields } from "./travelPlan.constant";
 
 const createTravelPlan = async (user: IAuthUser, travelPlanData: any, files?: Express.Multer.File[]) => {
     if (!user?.email) throw new Error("User not found");
@@ -127,7 +128,7 @@ const updateTravelPlan = async (
         photos: existingPlan.photos,
     };
 
-   
+
     const allowedFields = ["title", "destination", "country", "budget", "description", "travelType", "visibility", "startDate", "endDate"];
     for (const field of allowedFields) {
         if (travelPlanData[field] !== undefined) {
@@ -145,6 +146,55 @@ const updateTravelPlan = async (
     });
 
     return updatedPlan;
+};
+
+const matchTravelPlans = async (query: any) => {
+    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(query);
+
+    const filters: any = {};
+
+    // Filterable fields
+    travelPlanFilterableFields.forEach(field => {
+        if (query[field]) {
+            filters[field] = query[field];
+        }
+    });
+
+    // Keyword search
+    if (query.search) {
+        filters.OR = travelPlanSearchableFields.map(field => ({
+            [field]: { contains: String(query.search), mode: 'insensitive' }
+        }));
+    }
+
+    // Optional: filter by interests if passed from frontend
+    if (query.interests) {
+        const interestsArray = Array.isArray(query.interests) ? query.interests : [query.interests];
+        filters.user = { interests: { hasSome: interestsArray } };
+    }
+
+    const matchedPlans = await prisma.travelPlan.findMany({
+        where: filters,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+            user: { select: { id: true, name: true, profileImage: true, interests: true } },
+            reviews: true,
+            joinRequests: true,
+        },
+    });
+
+    const total = await prisma.travelPlan.count({ where: filters });
+
+    return {
+        meta: {
+            page,
+            limit,
+            total,
+        },
+        data: matchedPlans,
+    };
 };
 
 const deleteTravelPlan = async (id: string, user: IAuthUser) => {
@@ -167,5 +217,6 @@ export const travelPlanService = {
     getAllTravelPlans,
     getTravelPlanById,
     updateTravelPlan,
+    matchTravelPlans,
     deleteTravelPlan,
 };

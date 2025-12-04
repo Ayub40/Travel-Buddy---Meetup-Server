@@ -23,6 +23,8 @@ router.post(
 
 router.get("/", travelPlanController.getAllTravelPlans);
 
+router.get("/match", travelPlanController.matchTravelPlans);
+
 // GET BY ID
 router.get("/:id", travelPlanController.getTravelPlanById);
 

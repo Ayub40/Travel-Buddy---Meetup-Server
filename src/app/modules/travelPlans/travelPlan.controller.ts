@@ -66,6 +66,17 @@ export const updateTravelPlan = catchAsync(async (req: Request & { user?: IAuthU
     });
 });
 
+const matchTravelPlans = catchAsync(async (req: Request, res: Response) => {
+    const result = await travelPlanService.matchTravelPlans(req.query);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Travel plans matched successfully",
+        data: result,
+    });
+});
+
 export const deleteTravelPlan = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
     const { id } = req.params;
     const user = req.user;
@@ -84,5 +95,6 @@ export const travelPlanController = {
     getAllTravelPlans,
     getTravelPlanById,
     updateTravelPlan,
+    matchTravelPlans,
     deleteTravelPlan,
 };

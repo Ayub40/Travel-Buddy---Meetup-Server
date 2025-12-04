@@ -2,6 +2,8 @@ import express from 'express';
 import { userRoutes } from '../modules/users/user.routes';
 import { AuthRoutes } from '../modules/auth/auth.routes';
 import { TravelPlanRoutes } from '../modules/travelPlans/travelPlan.routes';
+import path from 'path';
+import { ReviewRoutes } from '../modules/reviews/review.routes';
 
 // import { apiLimiter } from '../middlewares/rateLimiter';
 
@@ -22,6 +24,10 @@ const moduleRoutes = [
     {
         path: '/travel-plans',
         route: TravelPlanRoutes
+    },
+    {
+        path: '/reviews',
+        route: ReviewRoutes
     }
 
 ];
