@@ -16,4 +16,14 @@ router.post(
     reviewController.createReview
 );
 
+
+// Update review
+router.patch(
+    "/:reviewId",
+    auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    validateRequest(updateReviewZodSchema),
+    reviewController.updateReview
+);
+
+
 export const ReviewRoutes = router;

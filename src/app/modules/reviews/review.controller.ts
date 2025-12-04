@@ -25,7 +25,30 @@ const createReview = catchAsync(
     }
 );
 
+// Update review
+const updateReview = catchAsync(
+    async (req: Request & { user?: IAuthUser }, res: Response) => {
+        const { reviewId } = req.params;
+        if (!req.user?.email) throw new Error("User not found");
+
+        const result = await reviewService.updateReview(
+            reviewId,
+            req.user.email,
+            req.body
+        );
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Review updated successfully",
+            data: result,
+        });
+    }
+);
+
+
 
 export const reviewController = {
     createReview,
+    updateReview,
 };
