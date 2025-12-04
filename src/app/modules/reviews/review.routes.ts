@@ -25,5 +25,14 @@ router.patch(
     reviewController.updateReview
 );
 
+// Delete review
+router.delete(
+    "/:reviewId",
+    // auth("USER", "ADMIN"),
+    auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    reviewController.deleteReview
+);
+
+
 
 export const ReviewRoutes = router;

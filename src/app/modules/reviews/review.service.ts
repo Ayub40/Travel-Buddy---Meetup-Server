@@ -66,9 +66,28 @@ const updateReview = async (
     });
 };
 
+// Delete Review
+const deleteReview = async (reviewId: string, userEmail: string) => {
+    const review = await prisma.review.findUniqueOrThrow({
+        where: { id: reviewId },
+    });
+
+    const user = await prisma.user.findUniqueOrThrow({
+        where: { email: userEmail },
+    });
+
+    if (review.userId !== user.id) {
+        throw new Error("You are not allowed to delete this review");
+    }
+
+    return prisma.review.delete({
+        where: { id: reviewId },
+    });
+};
 
 
 export const reviewService = {
     createReview,
     updateReview,
+    deleteReview,
 };

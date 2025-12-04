@@ -47,8 +47,26 @@ const updateReview = catchAsync(
 );
 
 
+// Delete review
+const deleteReview = catchAsync(
+    async (req: Request & { user?: IAuthUser }, res: Response) => {
+        const { reviewId } = req.params;
+        if (!req.user?.email) throw new Error("User not found");
+
+        const result = await reviewService.deleteReview(reviewId, req.user.email);
+
+        sendResponse(res, {
+            statusCode: 200,
+            success: true,
+            message: "Review deleted successfully",
+            data: result,
+        });
+    }
+);
+
 
 export const reviewController = {
     createReview,
     updateReview,
+    deleteReview,
 };
