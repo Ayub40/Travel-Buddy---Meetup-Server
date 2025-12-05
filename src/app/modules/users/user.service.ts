@@ -9,6 +9,7 @@ import { IAuthUser } from "../../interfaces/common";
 import { IPaginationOptions } from "../../interfaces/pagination";
 import { userSearchAbleFields } from "./user.constant";
 import { prisma } from "../../shared/prisma";
+import ApiError from "../../errors/ApiError";
 
 const createAdmin = async (req: Request): Promise<Admin> => {
 
@@ -323,7 +324,6 @@ const getMe = async (user: any) => {
     return userData;
 };
 
-
 const updateMyProfile = async (user: IAuthUser, req: Request) => {
     const userInfo = await prisma.user.findUniqueOrThrow({
         where: {
@@ -368,6 +368,24 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
     return { ...profileInfo };
 }
 
+// Delete User
+const deleteUser = async (id: string) => {
+    const user = await prisma.user.findUnique({
+        where: { id }
+    });
+
+    if (!user) {
+        throw new ApiError(404, "User not found!");
+    }
+
+    await prisma.user.delete({
+        where: { id }
+    });
+
+    return { message: "User deleted successfully" };
+};
+
+
 export const userService = {
     createAdmin,
     createUser,
@@ -375,5 +393,6 @@ export const userService = {
     changeProfileStatus,
     // getMyProfile,
     getMe,
-    updateMyProfile
+    updateMyProfile,
+    deleteUser
 }
