@@ -18,20 +18,30 @@ export const userFilterableFields: string[] = [
     'isVerified'
 ];
 
+// Only fields that are safe for Prisma 'contains' search
 export const userSearchAbleFields: string[] = [
     'name',
     'email',
     'country',
     'city',
-    'role',
-    'status',
-    'gender',
-    'budgetRange',
-    'interests',
-    'visitedCountries',
-    'budgetRange',
-    'gender',
-    'age',
     'currentLocation',
-    'isVerified'
+    'bio'
 ];
+
+// export const userSearchAbleFields: string[] = [
+//     'name',
+//     'email',
+//     'country',
+//     'city',
+//     'role',
+//     'status',
+//     'gender',
+//     'budgetRange',
+//     'interests',
+//     'visitedCountries',
+//     'budgetRange',
+//     'gender',
+//     'age',
+//     'currentLocation',
+//     'isVerified'
+// ];

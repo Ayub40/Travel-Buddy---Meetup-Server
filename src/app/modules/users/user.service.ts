@@ -91,30 +91,102 @@ const createUser = async (req: Request) => {
     return result;
 };
 
+// const getAllFromDB = async (params: any, options: IPaginationOptions) => {
+//     const { page, limit, skip } = paginationHelper.calculatePagination(options);
+//     const { searchTerm, ...filterData } = params;
+
+//     const andConditions: Prisma.UserWhereInput[] = [];
+
+//     if (searchTerm) {
+//         andConditions.push({
+//             OR: userSearchAbleFields.map(field => ({
+//                 [field]: {
+//                     contains: searchTerm,
+//                     mode: 'insensitive'
+//                 }
+//             }))
+//         });
+//     }
+
+//     if (Object.keys(filterData).length > 0) {
+//         andConditions.push({
+//             AND: Object.keys(filterData).map(key => ({
+//                 [key]: {
+//                     equals: (filterData as any)[key]
+//                 }
+//             }))
+//         });
+//     }
+
+//     const whereConditions: Prisma.UserWhereInput = andConditions.length > 0 ? { AND: andConditions } : {};
+
+//     const users = await prisma.user.findMany({
+//         where: whereConditions,
+//         skip,
+//         take: limit,
+//         orderBy: options.sortBy && options.sortOrder ? {
+//             [options.sortBy]: options.sortOrder
+//         } : { createdAt: 'desc' },
+//         select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             role: true,
+//             status: true,
+//             profileImage: true,
+//             bio: true,
+//             age: true,
+//             gender: true,
+//             country: true,
+//             city: true,
+//             currentLocation: true,
+//             interests: true,
+//             visitedCountries: true,
+//             budgetRange: true,
+//             isVerified: true,
+//             createdAt: true,
+//             updatedAt: true,
+//             admin: true
+//         }
+//     });
+
+//     const total = await prisma.user.count({ where: whereConditions });
+
+//     return {
+//         meta: { page, limit, total },
+//         data: users
+//     };
+// };
+
 const getAllFromDB = async (params: any, options: IPaginationOptions) => {
     const { page, limit, skip } = paginationHelper.calculatePagination(options);
     const { searchTerm, ...filterData } = params;
 
     const andConditions: Prisma.UserWhereInput[] = [];
 
+    // SearchTerm (only string fields)
     if (searchTerm) {
         andConditions.push({
             OR: userSearchAbleFields.map(field => ({
-                [field]: {
-                    contains: searchTerm,
-                    mode: 'insensitive'
-                }
+                [field]: { contains: searchTerm, mode: 'insensitive' }
             }))
         });
     }
 
+    // Filters
     if (Object.keys(filterData).length > 0) {
         andConditions.push({
-            AND: Object.keys(filterData).map(key => ({
-                [key]: {
-                    equals: (filterData as any)[key]
+            AND: Object.keys(filterData).map(key => {
+                const value = (filterData as any)[key];
+
+                // Array fields
+                if (['interests', 'visitedCountries'].includes(key)) {
+                    return { [key]: { has: value } }; // 'has' is for single value
                 }
-            }))
+
+                // String, enum, number, boolean fields
+                return { [key]: { equals: value } };
+            })
         });
     }
 
@@ -157,6 +229,7 @@ const getAllFromDB = async (params: any, options: IPaginationOptions) => {
         data: users
     };
 };
+
 
 const changeProfileStatus = async (id: string, status: UserRole) => {
     const userData = await prisma.user.findUniqueOrThrow({
