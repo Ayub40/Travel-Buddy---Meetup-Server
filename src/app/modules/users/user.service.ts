@@ -175,65 +175,6 @@ const changeProfileStatus = async (id: string, status: UserRole) => {
     return updateUserStatus;
 };
 
-// const getMyProfile = async (user: IAuthUser) => {
-
-//     if (!user) throw new Error("User not found");
-
-//     const userInfo = await prisma.user.findUniqueOrThrow({
-//         where: { email: user.email },
-//         select: {
-//             id: true,
-//             email: true,
-//             needPasswordChange: true,
-//             role: true,
-//             status: true,
-//         }
-//     });
-
-//     let profileInfo: any = {};
-
-
-//     if (userInfo.role === UserRole.SUPER_ADMIN || userInfo.role === UserRole.ADMIN) {
-//         profileInfo = await prisma.admin.findUnique({
-//             where: { email: userInfo.email },
-//             select: {
-//                 id: true,
-//                 name: true,
-//                 email: true,
-//                 profilePhoto: true,
-//                 contactNumber: true,
-//                 isDeleted: true,
-//                 createdAt: true,
-//                 updatedAt: true,
-//             }
-//         });
-//     } else if (userInfo.role === UserRole.USER) {
-//         profileInfo = await prisma.user.findUnique({
-//             where: { email: userInfo.email },
-//             select: {
-//                 id: true,
-//                 name: true,
-//                 email: true,
-//                 profileImage: true,
-//                 bio: true,
-//                 age: true,
-//                 gender: true,
-//                 country: true,
-//                 city: true,
-//                 currentLocation: true,
-//                 interests: true,
-//                 visitedCountries: true,
-//                 budgetRange: true,
-//                 isVerified: true,
-//                 createdAt: true,
-//                 updatedAt: true,
-//             }
-//         });
-//     }
-
-//     return { ...userInfo, ...profileInfo };
-// };
-
 const getMe = async (user: any) => {
     if (!user?.email) {
         throw new Error("Invalid user!");
@@ -368,8 +309,114 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
     return { ...profileInfo };
 }
 
+// New
+// get a single user's public profile
+const getSingleUserFromDB = async (id: string) => {
+    const result = await prisma.user.findUnique({
+        where: {
+            id,
+            status: UserStatus.ACTIVE,
+        },
+        select: {
+            id: true,
+            email: true,
+            role: true,
+            name: true,
+            bio: true,
+            interests: true,
+            visitedCountries: true,
+            currentLocation: true,
+            profileImage: true,
+            // coverPhoto: true,
+            // socialLinks: true,
+
+            travelPlans: {
+                select: {
+                    id: true,
+                    title: true,
+                    destination: true,
+                    country: true,
+                    startDate: true,
+                    endDate: true,
+                    budget: true,
+                    travelType: true,
+                    visibility: true,
+                }
+            },
+
+            reviews: {
+                select: {
+                    id: true,
+                    rating: true,
+                    comment: true,
+                    travelPlanId: true,
+                    createdAt: true,
+                    //   reviewer: {
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            profileImage: true,
+                        }
+                    }
+                }
+            },
+
+            // payments: {
+            //     select: {
+            //         id: true,
+            //         amount: true,
+            //         status: true,
+            //         planType: true,
+            //     }
+            // },
+
+            // joinRequests: {
+            //     select: {
+            //         id: true,
+            //         status: true,
+            //         travelPlanId: true,
+            //     }
+            // },
+
+            createdAt: true,
+            updatedAt: true,
+        },
+    });
+
+    return result;
+};
+
+
+// Admin Only
+
 // Delete User
-const deleteUser = async (id: string) => {
+const softDeleteUser = async (id: string) => {
+    const user = await prisma.user.findUnique({
+        where: { id }
+    });
+
+    if (!user) {
+        throw new ApiError(404, "User not found!");
+    }
+
+    // ❗ Soft Delete → status = DELETED
+    const result = await prisma.user.update({
+        where: { id },
+        data: {
+            status: "DELETED"
+        }
+    });
+
+    // await prisma.user.delete({
+    //     where: { id }
+    // });
+
+    return { message: "User deleted successfully" };
+};
+
+// Delete User
+const hardDeleteUser = async (id: string) => {
     const user = await prisma.user.findUnique({
         where: { id }
     });
@@ -386,13 +433,67 @@ const deleteUser = async (id: string) => {
 };
 
 
+
+
+
+// const getAllUsers = async (query: any) => {
+//     const { page, limit, skip, sortBy, sortOrder } =
+//         paginationHelper.calculatePagination(query);
+
+//     const filters: any = {};
+
+//     // search by name or email
+//     if (query.search) {
+//         filters.OR = [
+//             { name: { contains: query.search, mode: "insensitive" } },
+//             { email: { contains: query.search, mode: "insensitive" } },
+//         ];
+//     }
+
+//     // optional role filter (if needed)
+//     if (query.role) {
+//         filters.role = query.role;
+//     }
+
+//     const users = await prisma.user.findMany({
+//         where: filters,
+//         skip,
+//         take: limit,
+//         orderBy: { [sortBy]: sortOrder },
+//         select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             profileImage: true,
+//             role: true,
+//         },
+//     });
+
+//     const total = await prisma.user.count({
+//         where: filters,
+//     });
+
+//     return {
+//         meta: {
+//             page,
+//             limit,
+//             total,
+//         },
+//         data: users,
+//     };
+// };
+
+
+
 export const userService = {
     createAdmin,
     createUser,
     getAllFromDB,
     changeProfileStatus,
-    // getMyProfile,
     getMe,
     updateMyProfile,
-    deleteUser
+    softDeleteUser,
+    hardDeleteUser,
+    // getAllUsers
+    getSingleUserFromDB
 }

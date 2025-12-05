@@ -10,6 +10,7 @@ import { IAuthUser } from "../../interfaces/common";
 import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import pick from "../../shared/pick";
+import ApiError from "../../errors/ApiError";
 
 const createAdmin = catchAsync(async (req: Request, res: Response) => {
     const result = await userService.createAdmin(req);
@@ -89,13 +90,52 @@ const updateMyProfile = catchAsync(async (req: Request & { user?: IAuthUser }, r
     })
 });
 
-const deleteUser = catchAsync(async (req: Request, res: Response) => {
-    const result = await userService.deleteUser(req.params.id);
+const softDeleteUser = catchAsync(async (req: Request, res: Response) => {
+    const result = await userService.softDeleteUser(req.params.id);
 
     sendResponse(res, {
         statusCode: 200,
         success: true,
         message: "User deleted successfully",
+        data: result,
+    });
+});
+
+const hardDeleteUser = catchAsync(async (req: Request, res: Response) => {
+    const result = await userService.hardDeleteUser(req.params.id);
+
+    sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: "User deleted successfully",
+        data: result,
+    });
+});
+
+// const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+//     const result = await userService.getAllUsers(req.query);
+
+//     sendResponse(res, {
+//         statusCode: 200,
+//         success: true,
+//         message: "Users retrieved successfully",
+//         data: result,
+//     });
+// });
+
+const getSingleUser = catchAsync(async (req: Request, res: Response) => {
+    const id = req.params.id;
+
+    const result = await userService.getSingleUserFromDB(id);
+
+    if (!result) {
+        throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
+    }
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "User profile retrieved successfully!",
         data: result,
     });
 });
@@ -108,5 +148,7 @@ export const userController = {
     changeProfileStatus,
     getMyProfile,
     updateMyProfile,
-    deleteUser
+    softDeleteUser,
+    hardDeleteUser,
+    getSingleUser
 }

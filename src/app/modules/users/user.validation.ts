@@ -30,7 +30,7 @@ const createUsers = z.object({
         }),
 
         email: z.string({
-            error: "Email is required!",
+            error: "Invalid email format!",
         }),
 
         bio: z.string({

@@ -11,9 +11,14 @@ const router = express.Router();
 
 router.get(
     '/',
-    auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+    // auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
     userController.getAllFromDB
 );
+
+router.get("/:id", userController.getSingleUser);
+
+// router.get("/admin-get", auth(UserRole.ADMIN), userController.getAllUsers);
+
 
 router.get(
     '/me',
@@ -58,6 +63,8 @@ router.patch(
     }
 );
 
-router.delete("/:id", auth(UserRole.ADMIN), userController.deleteUser);
+router.delete("/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
+
+router.delete("/:id/hard", auth(UserRole.ADMIN), userController.hardDeleteUser);
 
 export const userRoutes = router;
