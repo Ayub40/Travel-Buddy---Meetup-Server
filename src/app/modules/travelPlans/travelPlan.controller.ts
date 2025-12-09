@@ -4,6 +4,9 @@ import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import httpStatus from "http-status";
 import { IAuthUser } from "../../interfaces/common";
+import { IPaginationOptions } from "../../interfaces/pagination";
+import { travelPlanFilterableFields, travelPlanSearchableFields } from "./travelPlan.constant";
+import pick from "../../shared/pick";
 
 const createTravelPlan = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
     const files = req.files as Express.Multer.File[] | undefined;
@@ -20,13 +23,28 @@ const createTravelPlan = catchAsync(async (req: Request & { user?: IAuthUser }, 
 });
 
 const getAllTravelPlans = catchAsync(async (req: Request, res: Response) => {
-    const result = await travelPlanService.getAllTravelPlans(req.query);
+
+    // const filters = pick(req.query, travelPlanSearchableFields);
+    const filters = pick(req.query, travelPlanFilterableFields);
+    const options: IPaginationOptions = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+
+    // const result = await travelPlanService.getAllTravelPlans(filters, options);
+
+    // Pass searchTerm separately
+    const { searchTerm } = req.query;
+
+    const result = await travelPlanService.getAllTravelPlans(
+        { ...filters, ...(searchTerm ? { searchTerm } : {}) },
+        options
+    );
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: "Travel plans fetched successfully!",
-        data: result,
+        // data: result,
+        meta: result.meta,
+        data: result.data
     });
 });
 

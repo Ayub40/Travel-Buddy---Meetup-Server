@@ -45,13 +45,20 @@ router.post(
     }
 );
 
-
 router.patch(
     '/:id/status',
     auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
     validateRequest(userValidation.updateStatus),
     userController.changeProfileStatus
 );
+
+
+// router.patch(
+//     '/:id/status',
+//     auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+//     validateRequest(userValidation.updateStatus),
+//     userController.changeProfileStatus
+// );
 
 router.patch(
     "/update-my-profile",
@@ -63,8 +70,8 @@ router.patch(
     }
 );
 
-router.delete("/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
+router.delete("/soft/:id", auth(UserRole.ADMIN), userController.softDeleteUser);
 
-router.delete("/:id/hard", auth(UserRole.ADMIN), userController.hardDeleteUser);
+router.delete("/hard/:id", auth(UserRole.ADMIN), userController.hardDeleteUser);
 
 export const userRoutes = router;

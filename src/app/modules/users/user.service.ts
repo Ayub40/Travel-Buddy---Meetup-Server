@@ -231,22 +231,42 @@ const getAllFromDB = async (params: any, options: IPaginationOptions) => {
 };
 
 
-const changeProfileStatus = async (id: string, status: UserRole) => {
-    const userData = await prisma.user.findUniqueOrThrow({
-        where: {
-            id
+// const changeProfileStatus = async (id: string, status: UserRole) => {
+//     const userData = await prisma.user.findUniqueOrThrow({
+//         where: {
+//             id
+//         }
+//     });
+
+//     const updateUserStatus = await prisma.user.update({
+//         where: {
+//             id
+//         },
+//         data: status
+//     });
+
+//     return updateUserStatus;
+// };
+
+const changeProfileStatus = async (id: string, payload: { role: UserRole }) => {
+    const user = await prisma.user.findUnique({
+        where: { id }
+    });
+
+    if (!user) {
+        throw new Error("User not found!");
+    }
+
+    const updatedUser = await prisma.user.update({
+        where: { id },
+        data: {
+            role: payload.role
         }
     });
 
-    const updateUserStatus = await prisma.user.update({
-        where: {
-            id
-        },
-        data: status
-    });
-
-    return updateUserStatus;
+    return updatedUser;
 };
+
 
 const getMe = async (user: any) => {
     if (!user?.email) {

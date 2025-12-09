@@ -11,5 +11,3 @@ export const travelPlanSearchableFields: string[] = [
     'country',
     'description',
 ];
-
-
