@@ -18,7 +18,7 @@ app.post(
 );
 
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: ['http://localhost:3000', 'https://travel-buddy-meetup-4028.vercel.app'],
     credentials: true
 }));
 
