@@ -73,9 +73,28 @@ const updateStatus = z.object({
     }),
 });
 
+const joinRequestValidation = z.object({
+    body: z.object({
+        status: z.enum(["ACCEPTED", "REJECTED"]),
+    }),
+});
+
+const updateByAdmin = z.object({
+    body: z.object({
+        name: z.string().optional(),
+        email: z.string().email().optional(),
+        contactNumber: z.string().optional(),
+        role: z.enum(["USER", "ADMIN", "SUPER_ADMIN"]).optional(),
+        status: z.enum(["ACTIVE", "INACTIVE", "DELETED"]).optional()
+    })
+});
+
+
 export const userValidation = {
     createAdmin,
     createUsers,
     // createTraveler,
     updateStatus,
+    joinRequestValidation,
+    updateByAdmin
 };

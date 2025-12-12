@@ -13,6 +13,27 @@ router.get("/", travelPlanController.getAllTravelPlans);
 
 router.get("/match", travelPlanController.matchTravelPlans);
 
+// New Code// My travel plans (only for authenticated users)
+router.get(
+    "/my-travel-plan",
+    auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    travelPlanController.getMyTravelPlans
+);
+
+router.get(
+    "/my-match-count",
+    auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    travelPlanController.getMyMatchCount
+);
+
+// router.get(
+//     "/my-matches",
+//     auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+//     travelPlanController.getMyMatchedTravelers
+// );
+
+
+
 // GET BY ID
 router.get("/:id", travelPlanController.getTravelPlanById);
 

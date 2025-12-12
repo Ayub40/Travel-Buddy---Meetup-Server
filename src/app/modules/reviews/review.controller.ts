@@ -46,7 +46,6 @@ const updateReview = catchAsync(
     }
 );
 
-
 // Delete review
 const deleteReview = catchAsync(
     async (req: Request & { user?: IAuthUser }, res: Response) => {
@@ -65,10 +64,28 @@ const deleteReview = catchAsync(
 );
 
 // Get reviews by plan with average rating
-const getReviewsByPlan = catchAsync(async (req: Request, res: Response) => {
-    const { travelPlanId } = req.params;
+// const getReviewsByPlan = catchAsync(async (req: Request, res: Response) => {
+//     const { travelPlanId } = req.params;
 
-    const result = await reviewService.getReviewsByPlan(travelPlanId);
+//     const result = await reviewService.getReviewsByPlan(travelPlanId);
+
+//     sendResponse(res, {
+//         statusCode: 200,
+//         success: true,
+//         message: "Reviews fetched successfully",
+//         data: result.reviews,
+//         meta: {
+//             averageRating: result.averageRating,
+//             totalReviews: result.reviews.length,
+//         },
+//     });
+// });
+
+const getReviewsByPlan = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const { travelPlanId } = req.params;
+    const userEmail = req.user?.email; // optional
+
+    const result = await reviewService.getReviewsByPlan(travelPlanId, userEmail);
 
     sendResponse(res, {
         statusCode: 200,
@@ -102,7 +119,6 @@ const getReviewsByUser = catchAsync(
         });
     }
 );
-
 
 export const reviewController = {
     createReview,

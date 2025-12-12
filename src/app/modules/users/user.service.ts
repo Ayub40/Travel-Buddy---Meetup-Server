@@ -10,6 +10,8 @@ import { IPaginationOptions } from "../../interfaces/pagination";
 import { userSearchAbleFields } from "./user.constant";
 import { prisma } from "../../shared/prisma";
 import ApiError from "../../errors/ApiError";
+import { Secret } from "jsonwebtoken";
+import { jwtHelpers } from "../../../helpers/jwtHelpers";
 
 const createAdmin = async (req: Request): Promise<Admin> => {
 
@@ -91,73 +93,6 @@ const createUser = async (req: Request) => {
     return result;
 };
 
-// const getAllFromDB = async (params: any, options: IPaginationOptions) => {
-//     const { page, limit, skip } = paginationHelper.calculatePagination(options);
-//     const { searchTerm, ...filterData } = params;
-
-//     const andConditions: Prisma.UserWhereInput[] = [];
-
-//     if (searchTerm) {
-//         andConditions.push({
-//             OR: userSearchAbleFields.map(field => ({
-//                 [field]: {
-//                     contains: searchTerm,
-//                     mode: 'insensitive'
-//                 }
-//             }))
-//         });
-//     }
-
-//     if (Object.keys(filterData).length > 0) {
-//         andConditions.push({
-//             AND: Object.keys(filterData).map(key => ({
-//                 [key]: {
-//                     equals: (filterData as any)[key]
-//                 }
-//             }))
-//         });
-//     }
-
-//     const whereConditions: Prisma.UserWhereInput = andConditions.length > 0 ? { AND: andConditions } : {};
-
-//     const users = await prisma.user.findMany({
-//         where: whereConditions,
-//         skip,
-//         take: limit,
-//         orderBy: options.sortBy && options.sortOrder ? {
-//             [options.sortBy]: options.sortOrder
-//         } : { createdAt: 'desc' },
-//         select: {
-//             id: true,
-//             name: true,
-//             email: true,
-//             role: true,
-//             status: true,
-//             profileImage: true,
-//             bio: true,
-//             age: true,
-//             gender: true,
-//             country: true,
-//             city: true,
-//             currentLocation: true,
-//             interests: true,
-//             visitedCountries: true,
-//             budgetRange: true,
-//             isVerified: true,
-//             createdAt: true,
-//             updatedAt: true,
-//             admin: true
-//         }
-//     });
-
-//     const total = await prisma.user.count({ where: whereConditions });
-
-//     return {
-//         meta: { page, limit, total },
-//         data: users
-//     };
-// };
-
 const getAllFromDB = async (params: any, options: IPaginationOptions) => {
     const { page, limit, skip } = paginationHelper.calculatePagination(options);
     const { searchTerm, ...filterData } = params;
@@ -230,24 +165,6 @@ const getAllFromDB = async (params: any, options: IPaginationOptions) => {
     };
 };
 
-
-// const changeProfileStatus = async (id: string, status: UserRole) => {
-//     const userData = await prisma.user.findUniqueOrThrow({
-//         where: {
-//             id
-//         }
-//     });
-
-//     const updateUserStatus = await prisma.user.update({
-//         where: {
-//             id
-//         },
-//         data: status
-//     });
-
-//     return updateUserStatus;
-// };
-
 const changeProfileStatus = async (id: string, payload: { role: UserRole }) => {
     const user = await prisma.user.findUnique({
         where: { id }
@@ -267,14 +184,23 @@ const changeProfileStatus = async (id: string, payload: { role: UserRole }) => {
     return updatedUser;
 };
 
-
 const getMe = async (user: any) => {
-    if (!user?.email) {
+    const email =
+        user?.email ||
+        user?.payload?.email ||
+        user?.user?.email;
+
+    // if (!user?.email) {
+    if (!email) {
         throw new Error("Invalid user!");
     }
 
     const userData = await prisma.user.findUniqueOrThrow({
-        where: { email: user.email },
+        // where: { email: user.email },
+        // where: {
+        //     email: user.email || user?.payload?.email
+        // },
+        where: { email },
         select: {
             id: true,
             name: true,
@@ -367,40 +293,95 @@ const updateMyProfile = async (user: IAuthUser, req: Request) => {
     });
 
     const file = req.file;
+
+    console.log("Uploaded file:", file); // 🔹 Debug
+
     if (file) {
         const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
-        req.body.profilePhoto = uploadToCloudinary?.secure_url;
+        //  req.body.profileImage = uploaded?.secure_url; // USER
+        console.log("Cloudinary result:", uploadToCloudinary); // 🔹 Debug
+
+        if (userInfo.role === UserRole.USER) {
+            // Ensure it's a string
+            req.body.profileImage = typeof uploadToCloudinary === "string"
+                ? uploadToCloudinary
+                : uploadToCloudinary?.secure_url;
+        } else {
+            // Admin/SuperAdmin
+            req.body.profilePhoto = typeof uploadToCloudinary === "string"
+                ? uploadToCloudinary
+                : uploadToCloudinary?.secure_url;
+        }
     }
+
+    console.log("Request body before update:", req.body); // 🔹 Debug
 
     let profileInfo;
 
-    if (userInfo.role === UserRole.SUPER_ADMIN) {
-        profileInfo = await prisma.admin.update({
-            where: {
-                email: userInfo.email
-            },
-            data: req.body
-        })
+    // Minor fix: parse 'data' field if it exists
+    let updateData: any = { ...req.body };
+
+    if (updateData.data && typeof updateData.data === "string") {
+        try {
+            const parsedData = JSON.parse(updateData.data);
+            updateData = { ...updateData, ...parsedData };
+            delete updateData.data;
+        } catch (err) {
+            console.log("JSON parse error:", err);
+        }
     }
-    else if (userInfo.role === UserRole.ADMIN) {
-        profileInfo = await prisma.admin.update({
-            where: {
-                email: userInfo.email
-            },
-            data: req.body
-        })
+
+    // Ensure profileImage is a string
+    if (updateData.profileImage && typeof updateData.profileImage !== "string") {
+        updateData.profileImage = updateData.profileImage.secure_url || "";
     }
-    else if (userInfo.role === UserRole.USER) {
+
+    // ===== NEW: Convert array fields from string to array if needed =====
+    const arrayFields = ["interests", "visitedCountries"];
+    arrayFields.forEach((field) => {
+        if (updateData[field] && typeof updateData[field] === "string") {
+            try {
+                updateData[field] = JSON.parse(updateData[field]);
+            } catch (err) {
+                // fallback: split by comma
+                updateData[field] = updateData[field].split(",").map((item: string) => item.trim());
+            }
+        }
+    });
+
+    // ===== UPDATE Prisma =====
+    if (userInfo.role === UserRole.SUPER_ADMIN || userInfo.role === UserRole.ADMIN) {
+        profileInfo = await prisma.admin.update({
+            where: { email: userInfo.email },
+            // data: req.body
+            data: updateData,
+        });
+    } else if (userInfo.role === UserRole.USER) {
+        // Ensure profileImage is a string
+        // const updateData = { ...req.body };
+        // if (updateData.profileImage && typeof updateData.profileImage !== "string") {
+        //     updateData.profileImage = updateData.profileImage.secure_url || "";
+        // }
+
+        const validData = {
+            name: updateData.name,
+            profileImage: updateData.profileImage,
+            bio: updateData.bio,
+            currentLocation: updateData.location || updateData.currentLocation,
+            interests: updateData.interests,
+            visitedCountries: updateData.visitedCountries
+        };
+
+
         profileInfo = await prisma.user.update({
-            where: {
-                email: userInfo.email
-            },
-            data: req.body,
+            where: { email: userInfo.email },
+            // data: updateData
+            data: validData
         });
     }
 
     return { ...profileInfo };
-}
+};
 
 // New
 // get a single user's public profile
@@ -480,7 +461,6 @@ const getSingleUserFromDB = async (id: string) => {
     return result;
 };
 
-
 // Admin Only
 
 // Delete User
@@ -525,56 +505,234 @@ const hardDeleteUser = async (id: string) => {
     return { message: "User deleted successfully" };
 };
 
+export const getDashboardStats = async (userEmail: string) => {
+    // Search User
+    const user = await prisma.user.findUniqueOrThrow({
+        where: { email: userEmail },
+        select: { id: true, name: true, profileImage: true }
+    });
+    // console.log("🔥 All Users Image Check:", user);
+    const userId = user.id;
+
+    // Main Stats
+    const totalTravelPlans = await prisma.travelPlan.count({ where: { userId } });
+    const totalJoinRequests = await prisma.tripJoinRequest.count({ where: { userId } });
+    const totalReviews = await prisma.review.count({ where: { userId } });
+    const totalPayments = await prisma.payment.count({ where: { userId } });
+
+    //  User's Travel Plans
+    const userTravelPlans = await prisma.travelPlan.findMany({
+        where: { userId, visibility: true },
+        select: { id: true, destination: true, startDate: true, endDate: true }
+    });
 
 
+    // 3️⃣ ✅ REAL MATCH COUNT (only ACCEPTED)
+    // When:
+    // - Someone sent request to my travel plan
+    // - I accepted it
+
+    // 4️⃣ ✅ My outgoing join requests (Sabuj → Others)
+    const myJoinRequests = await prisma.tripJoinRequest.findMany({
+        // where: { userId },
+        where: {
+            travelPlan: {
+                userId: userId
+            },
+            status: "PENDING"
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profileImage: true,
+                    email: true
+                }
+            },
+            travelPlan: {
+                select: {
+                    title: true,
+                    country: true,
+                    destination: true,
+                    budget: true,
+                    description: true,
+                    travelType: true,
+                    startDate: true,
+                    endDate: true
+                }
+            }
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+
+    // 5️⃣ ✅ Incoming accepted matches (Others → My trips)
+    // const matchedCount = await prisma.tripJoinRequest.count({
+    const matchedCount = await prisma.tripJoinRequest.findMany({
+        where: {
+            status: "ACCEPTED",
+            travelPlan: {
+                userId
+            }
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profileImage: true,
+                }
+            },
+            travelPlan: {
+                select: {
+                    id: true,
+                    title: true,
+                    destination: true,
+                }
+            }
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+
+    //  Upcoming Trips (future trips filter)
+    const upcomingTrips = await prisma.travelPlan.findMany({
+        where: { userId, startDate: { gte: new Date() } },
+        orderBy: { startDate: 'asc' },
+        select: {
+            id: true,
+            title: true,
+            country: true,
+            destination: true,
+            budget: true,
+            description: true,
+            travelType: true,
+            startDate: true,
+            endDate: true,
+            joinRequests: {
+                select: {
+                    id: true,
+                    status: true
+                }
+            }
+        }
+    });
+
+    // myJoinRequests --> incomingJoinRequests
+    // matchedCount   --> acceptedMatches 
+
+    return {
+        userName: user.name,
+        totalTravelPlans,
+        // totalJoinRequests,
+        totalJoinRequests: myJoinRequests.length,
+        joinRequests: myJoinRequests,
+        matchedCount: matchedCount.length,
+        matches: matchedCount,
+        totalReviews,
+        totalPayments,
+        upcomingTrips,
+    };
+};
+
+export const sendJoinRequest = async (userEmail: string, travelPlanId: string) => {
+    const user = await prisma.user.findUniqueOrThrow({ where: { email: userEmail }, select: { id: true, email: true } });
+    const userId = user.id;
+
+    const travelPlan = await prisma.travelPlan.findUniqueOrThrow({
+        where: { id: travelPlanId },
+        // select: { id: true, userId: true, }
+        include: {
+            user: {
+                select: {
+                    name: true,
+                    email: true
+                }
+            }
+        }
+    });
+
+    if (travelPlan.userId === userId) {
+        throw new Error("You cannot send a join request to your own travel plan.");
+    }
+
+    const existingRequest = await prisma.tripJoinRequest.findFirst({
+        where: { userId, travelPlanId }
+    });
+    if (existingRequest) {
+        throw new Error("Join request already sent.");
+    }
+
+    const joinRequest = await prisma.tripJoinRequest.create({
+        data: { userId, travelPlanId, status: "PENDING" }
+    });
+
+    return joinRequest;
+};
+
+export const updateJoinRequestStatus = async (requestId: string, status: 'ACCEPTED' | 'REJECTED') => {
+    const updated = await prisma.tripJoinRequest.update({
+        where: { id: requestId },
+        data: { status }
+    });
+    return updated;
+};
+
+const updateUserByAdmin = async (id: string, data: any): Promise<IAuthUser> => {
+
+    const existingUser = await prisma.user.findUniqueOrThrow({ where: { id } });
 
 
-// const getAllUsers = async (query: any) => {
-//     const { page, limit, skip, sortBy, sortOrder } =
-//         paginationHelper.calculatePagination(query);
+    const allowedFields = [
+        "name", "email", "contactNumber", "role", "status"
+    ];
+    const updateData: any = {};
+    for (const key of allowedFields) {
+        if (data[key] !== undefined) {
+            updateData[key] = data[key];
+        }
+    }
 
-//     const filters: any = {};
+    const updatedUser = await prisma.user.update({
+        where: { id },
+        data: updateData
+    });
 
-//     // search by name or email
-//     if (query.search) {
-//         filters.OR = [
-//             { name: { contains: query.search, mode: "insensitive" } },
-//             { email: { contains: query.search, mode: "insensitive" } },
-//         ];
-//     }
+    return updatedUser;
+};
 
-//     // optional role filter (if needed)
-//     if (query.role) {
-//         filters.role = query.role;
-//     }
+const getUserById = async (id: string): Promise<IAuthUser | null> => {
+    const result = await prisma.user.findUnique({ where: { id } });
+    return result;
+};
 
-//     const users = await prisma.user.findMany({
-//         where: filters,
-//         skip,
-//         take: limit,
-//         orderBy: { [sortBy]: sortOrder },
-//         select: {
-//             id: true,
-//             name: true,
-//             email: true,
-//             profileImage: true,
-//             role: true,
-//         },
-//     });
 
-//     const total = await prisma.user.count({
-//         where: filters,
-//     });
+export const updateAdminServiceByEmail = async (email: string, payload: any) => {
+  // Ensure admin exists and is not soft-deleted
+  const admin = await prisma.admin.findFirst({
+    where: { email, isDeleted: false },
+  });
 
-//     return {
-//         meta: {
-//             page,
-//             limit,
-//             total,
-//         },
-//         data: users,
-//     };
-// };
+  if (!admin) {
+    throw new Error("Admin not found");
+  }
+
+  // Update admin
+  const updated = await prisma.admin.update({
+    where: { id: admin.id }, // Prisma update needs id
+    data: {
+      name: payload.name,
+      contactNumber: payload.contactNumber,
+      profilePhoto: payload.profilePhoto,
+    },
+  });
+
+  return updated;
+};
+
 
 
 
@@ -588,5 +746,12 @@ export const userService = {
     softDeleteUser,
     hardDeleteUser,
     // getAllUsers
-    getSingleUserFromDB
+    getSingleUserFromDB,
+    getDashboardStats,
+    sendJoinRequest,
+    updateJoinRequestStatus,
+    // getMyJoinRequests
+    updateUserByAdmin,
+    getUserById,
+    updateAdminServiceByEmail
 }

@@ -7,6 +7,7 @@ import { IAuthUser } from "../../interfaces/common";
 import { IPaginationOptions } from "../../interfaces/pagination";
 import { travelPlanFilterableFields, travelPlanSearchableFields } from "./travelPlan.constant";
 import pick from "../../shared/pick";
+import ApiError from "../../errors/ApiError";
 
 const createTravelPlan = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
     const files = req.files as Express.Multer.File[] | undefined;
@@ -108,6 +109,48 @@ export const deleteTravelPlan = catchAsync(async (req: Request & { user?: IAuthU
     });
 });
 
+// New Code
+const getMyTravelPlans = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
+
+    const options: IPaginationOptions = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder']);
+    const result = await travelPlanService.getMyTravelPlans(req.user as IAuthUser, options);
+    
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Your travel plans fetched successfully",
+        meta: result.meta,
+        data: result.data,
+    });
+});
+
+const getMyMatchCount = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
+    const result = await travelPlanService.getMyMatchCount(req.user as IAuthUser);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Matched count fetched successfully",
+        data: result
+    });
+});
+
+// const getMyMatchedTravelers = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
+//     const user = req.user!;
+//     if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated");
+
+//     const result = await travelPlanService.getMatchedTravelers(user.email); 
+
+//     sendResponse(res, {
+//         statusCode: httpStatus.OK,
+//         success: true,
+//         message: "Matched travelers fetched successfully",
+//         data: result,
+//     });
+// });
+
+
+
 export const travelPlanController = {
     createTravelPlan,
     getAllTravelPlans,
@@ -115,4 +158,7 @@ export const travelPlanController = {
     updateTravelPlan,
     matchTravelPlans,
     deleteTravelPlan,
+    getMyTravelPlans,
+    getMyMatchCount,
+    // getMyMatchedTravelers
 };

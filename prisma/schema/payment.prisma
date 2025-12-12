@@ -1,14 +1,18 @@
 model Payment {
     id            String        @id @default(uuid())
     userId        String
+    planType      String?
+    paymentFor    String? // subscription / verified-badge
     amount        Int
     currency      String        @default("BDT")
     status        PaymentStatus @default(PENDING)
-    description   String?
     transactionId String?       @unique
+    description   String?
     method        String? // sslcommerz / stripe
-    planType      String?
-    paymentFor    String? // subscription / verified-badge
+
+    // 🔥 Stripe specific fields (must needed)
+    stripeEventId      String? @unique
+    paymentGatewayData Json?
 
     user User @relation(fields: [userId], references: [id])
 

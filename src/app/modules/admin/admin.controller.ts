@@ -6,7 +6,6 @@ import pick from '../../shared/pick';
 import sendResponse from '../../shared/sendResponse';
 import catchAsync from '../../shared/catchAsync';
 
-
 const getAllFromDB: RequestHandler = catchAsync(async (req: Request, res: Response) => {
     const filters = pick(req.query, adminFilterableFields);
     const options = pick(req.query, ['limit', 'page', 'sortBy', 'sortOrder'])
@@ -33,7 +32,6 @@ const getByIdFromDB = catchAsync(async (req: Request, res: Response) => {
     });
 })
 
-
 const updateIntoDB = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -58,7 +56,6 @@ const deleteFromDB = catchAsync(async (req: Request, res: Response) => {
     })
 })
 
-
 const softDeleteFromDB = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -70,6 +67,8 @@ const softDeleteFromDB = catchAsync(async (req: Request, res: Response) => {
         data: result
     })
 });
+
+
 
 export const AdminController = {
     getAllFromDB,

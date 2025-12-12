@@ -217,6 +217,7 @@ const getMe = async (user: any) => {
             currentLocation: true,
             createdAt: true,
             updatedAt: true,
+            
             travelPlans: {
                 select: {
                     id: true,

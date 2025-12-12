@@ -4,7 +4,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import { fileUploader } from '../../../helpers/fileUploader';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
-import { userController } from './user.controller';
+import { updateAdminByEmail, userController } from './user.controller';
 import { userValidation } from './user.validation';
 
 const router = express.Router();
@@ -15,15 +15,19 @@ router.get(
     userController.getAllFromDB
 );
 
+router.get(
+    "/dashboard",
+    auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    userController.getDashboardData
+);
+
 router.get("/:id", userController.getSingleUser);
-
-// router.get("/admin-get", auth(UserRole.ADMIN), userController.getAllUsers);
-
 
 router.get(
     '/me',
     auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.USER),
-    userController.getMyProfile
+    // userController.getMyProfile
+    userController.getMe
 )
 
 router.post(
@@ -45,6 +49,13 @@ router.post(
     }
 );
 
+router.post(
+    "/join-request/:travelPlanId",
+    // auth(UserRole.USER),
+    auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    userController.handleSendJoinRequest
+);
+
 router.patch(
     '/:id/status',
     auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
@@ -52,22 +63,40 @@ router.patch(
     userController.changeProfileStatus
 );
 
+// router.patch("/:id", updateAdmin);
+router.patch(
+    "/update-admin-by-email",
+    auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+    fileUploader.upload.single('file'),
+    updateAdminByEmail
+);
 
-// router.patch(
-//     '/:id/status',
-//     auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
-//     validateRequest(userValidation.updateStatus),
-//     userController.changeProfileStatus
-// );
 
 router.patch(
     "/update-my-profile",
     auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.USER),
     fileUploader.upload.single('file'),
     (req: Request, res: Response, next: NextFunction) => {
-        req.body = JSON.parse(req.body.data)
+        // req.body = JSON.parse(req.body.data)
         return userController.updateMyProfile(req, res, next)
     }
+);
+
+router.patch(
+    "/update-user-profile/:id",
+    auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
+    fileUploader.upload.single('file'),
+    validateRequest(userValidation.updateByAdmin),
+    (req, res, next) => {
+        return userController.updateUserByAdmin(req, res, next);
+    }
+);
+
+router.patch(
+    "/join-request/:requestId",
+    auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+    validateRequest(userValidation.joinRequestValidation),
+    userController.handleJoinRequest
 );
 
 router.delete("/soft/:id", auth(UserRole.ADMIN), userController.softDeleteUser);

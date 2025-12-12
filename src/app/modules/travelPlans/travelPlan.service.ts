@@ -34,6 +34,7 @@ const createTravelPlan = async (user: IAuthUser, travelPlanData: any, files?: Ex
 const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options);
     const { searchTerm, ...filterData } = params;
+    // const { searchTerm, fromDate, toDate, ...filterData } = params;
 
     const andConditions: Prisma.TravelPlanWhereInput[] = [];
 
@@ -52,6 +53,24 @@ const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
             }))
         });
     }
+
+    // Date range filter
+    // if (fromDate || toDate) {
+    //     const dateFilter: Prisma.TravelPlanWhereInput = {};
+
+    //     if (fromDate && toDate) {
+    //         dateFilter.startDate = {
+    //             gte: new Date(fromDate),
+    //             lte: new Date(toDate),
+    //         };
+    //     } else if (fromDate) {
+    //         dateFilter.startDate = { gte: new Date(fromDate) };
+    //     } else if (toDate) {
+    //         dateFilter.startDate = { lte: new Date(toDate) };
+    //     }
+
+    //     andConditions.push(dateFilter);
+    // }
 
     const whereConditions: Prisma.TravelPlanWhereInput = andConditions.length > 0 ? { AND: andConditions } : {};
 
@@ -204,16 +223,24 @@ const matchTravelPlans = async (query: any) => {
     // }
 
     // Exact date match (user selected startDate)
-    if (query.startDate) {
-        const selectedDate = new Date(query.startDate);
-        const nextDay = new Date(selectedDate);
-        nextDay.setDate(selectedDate.getDate() + 1);
+    // if (query.startDate) {
+    //     const selectedDate = new Date(query.startDate);
+    //     const nextDay = new Date(selectedDate);
+    //     nextDay.setDate(selectedDate.getDate() + 1);
 
-        filters.startDate = {
-            gte: selectedDate, // greater than or equal to selected date
-            lt: nextDay         // less than next day → effectively exact date match
-        };
+    //     filters.startDate = {
+    //         gte: selectedDate, // greater than or equal to selected date
+    //         lt: nextDay         // less than next day → effectively exact date match
+    //     };
+    // }
+
+    // Date range filter
+    if (query.startDate || query.endDate) {
+        filters.startDate = {};
+        if (query.startDate) filters.startDate.gte = new Date(query.startDate);
+        if (query.endDate) filters.startDate.lte = new Date(query.endDate);
     }
+
 
     const matchedPlans = await prisma.travelPlan.findMany({
         where: filters,
@@ -221,7 +248,7 @@ const matchTravelPlans = async (query: any) => {
         take: limit,
         orderBy: { [sortBy]: sortOrder },
         include: {
-            user: { select: { id: true, name: true, profileImage: true, interests: true } },
+            user: { select: { id: true, name: true, email: true, profileImage: true, interests: true } },
             reviews: true,
             joinRequests: true,
         },
@@ -239,19 +266,131 @@ const matchTravelPlans = async (query: any) => {
     };
 };
 
+// const deleteTravelPlan = async (id: string, user: IAuthUser) => {
+//     if (!user?.email) throw new Error("User not found");
+
+//     const existing = await prisma.travelPlan.findUniqueOrThrow({
+//         where: { id }
+//     });
+
+//     await prisma.travelPlan.delete({
+//         where: { id }
+//     });
+
+//     return { message: "Travel plan deleted successfully" };
+// };
+
+
 const deleteTravelPlan = async (id: string, user: IAuthUser) => {
     if (!user?.email) throw new Error("User not found");
 
-    const existing = await prisma.travelPlan.findUniqueOrThrow({
-        where: { id }
-    });
+    const userInfo = await prisma.user.findUniqueOrThrow({ where: { email: user.email } });
 
-    await prisma.travelPlan.delete({
-        where: { id }
-    });
+    const existing = await prisma.travelPlan.findUniqueOrThrow({ where: { id } });
+
+    // Authorization: Create User or ADMIN/SUPER_ADMIN 
+    if (existing.userId !== userInfo.id && !["ADMIN", "SUPER_ADMIN"].includes(user.role)) {
+        throw new Error("You are not authorized to delete this travel plan!");
+    }
+
+    await prisma.travelPlan.delete({ where: { id } });
 
     return { message: "Travel plan deleted successfully" };
 };
+
+
+// New Code
+const getMyTravelPlans = async (user: IAuthUser, options: IPaginationOptions) => {
+    if (!user?.email) throw new Error("User not found");
+
+    const userInfo = await prisma.user.findUniqueOrThrow({ where: { email: user.email } });
+
+    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(options);
+
+    const whereConditions: Prisma.TravelPlanWhereInput = {
+        userId: userInfo.id,
+    };
+
+    const travelPlans = await prisma.travelPlan.findMany({
+        where: whereConditions,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+            user: { select: { id: true, name: true, email: true, profileImage: true } },
+            reviews: true,
+            joinRequests: true,
+        },
+    });
+
+    const total = await prisma.travelPlan.count({ where: whereConditions });
+
+    return { meta: { page, limit, total }, data: travelPlans };
+};
+
+const getMyMatchCount = async (user: IAuthUser) => {
+    if (!user?.email) throw new Error("User not found");
+
+    const userInfo = await prisma.user.findUniqueOrThrow({
+        where: { email: user.email }
+    });
+
+    const totalMatches = await prisma.tripJoinRequest.count({
+        where: {
+            status: "ACCEPTED",
+            OR: [
+                { userId: userInfo.id },
+                {
+                    travelPlan: {
+                        userId: userInfo.id
+                    }
+                }
+            ]
+        }
+    });
+
+    return { totalMatches };
+};
+
+// const getMatchedTravelers = async (email: string) => {
+
+//     const user = await prisma.user.findUnique({
+//         where: { email },
+//         select: { id: true }
+//     });
+
+//     if (!user) throw new Error("User not found");
+
+//     const myPlans = await prisma.travelPlan.findMany({
+//         where: { userId: user.id, visibility: true },
+//         select: { destination: true, startDate: true, endDate: true },
+//     });
+
+//     const matchedTravelers: any[] = [];
+
+//     for (const plan of myPlans) {
+//         const matches = await prisma.travelPlan.findMany({
+//             where: {
+//                 destination: plan.destination,
+//                 startDate: plan.startDate,
+//                 endDate: plan.endDate,
+//                 userId: { not: user.id },
+//                 visibility: true,
+//             },
+//             select: {
+//                 id: true,
+//                 user: { select: { id: true, name: true, profileImage: true } },
+//                 destination: true,
+//                 startDate: true,
+//                 endDate: true,
+//             }
+//         });
+//         matchedTravelers.push(...matches);
+//     }
+
+//     return matchedTravelers;
+// };
+
 
 
 export const travelPlanService = {
@@ -261,4 +400,7 @@ export const travelPlanService = {
     updateTravelPlan,
     matchTravelPlans,
     deleteTravelPlan,
+    getMyTravelPlans,
+    getMyMatchCount,
+    // getMatchedTravelers
 };

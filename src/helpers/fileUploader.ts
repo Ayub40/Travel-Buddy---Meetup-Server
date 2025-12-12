@@ -14,6 +14,7 @@ const storage = multer.diskStorage({
 });
 
 async function uploadToCloudinary(file: Express.Multer.File) {
+    console.log("Cloudinary upload শুরু হল:", file.originalname);
     // Configuration
     cloudinary.config({
         cloud_name: config.cloudinary.cloud_name,
@@ -29,8 +30,12 @@ async function uploadToCloudinary(file: Express.Multer.File) {
         }
         )
         .catch((error) => {
+            console.error("Cloudinary upload error:", error);
             throw error;
         });
+
+    console.log("Cloudinary upload সফল:", uploadResult.secure_url);
+
     fs.unlinkSync(file.path);
 
     return uploadResult;

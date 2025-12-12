@@ -5,6 +5,7 @@ import { TravelPlanRoutes } from '../modules/travelPlans/travelPlan.routes';
 import path from 'path';
 import { ReviewRoutes } from '../modules/reviews/review.routes';
 import { AdminRoutes } from '../modules/admin/admin.routes';
+import { PaymentRoutes } from '../modules/payments/payment.routes';
 
 // import { apiLimiter } from '../middlewares/rateLimiter';
 
@@ -33,7 +34,11 @@ const moduleRoutes = [
     {
         path: '/admin',
         route: AdminRoutes
-    }
+    },
+    //  {
+    //     path: '/payments',
+    //     route: PaymentRoutes
+    // }
 
 ];
 

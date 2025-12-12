@@ -4,6 +4,7 @@ import { prisma } from "../../shared/prisma";
 import { IPaginationOptions } from "../../interfaces/pagination";
 import { adminSearchAbleFields } from "./admin.constant";
 import { IAdminFilterRequest } from "./admin.interface";
+import { IAuthUser } from "../../interfaces/common";
 
 const getAllFromDB = async (params: IAdminFilterRequest, options: IPaginationOptions) => {
     const { page, limit, skip } = paginationHelper.calculatePagination(options);
@@ -120,7 +121,6 @@ const deleteFromDB = async (id: string): Promise<Admin | null> => {
     return result;
 }
 
-
 const softDeleteFromDB = async (id: string): Promise<Admin | null> => {
     await prisma.admin.findUniqueOrThrow({
         where: {
@@ -154,11 +154,11 @@ const softDeleteFromDB = async (id: string): Promise<Admin | null> => {
     return result;
 }
 
-
 export const AdminService = {
     getAllFromDB,
     getByIdFromDB,
     updateIntoDB,
     deleteFromDB,
-    softDeleteFromDB
+    softDeleteFromDB,
+
 }
