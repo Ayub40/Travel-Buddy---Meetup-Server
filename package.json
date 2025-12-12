@@ -1,5 +1,5 @@
 {
-  "name": "ph-health-care-starter",
+  "name": "ph-travel-buddy-meetup-server",
   "version": "1.0.0",
   "main": "server.js",
   "author": "Ayub Khan",
@@ -10,8 +10,14 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
     "build": "tsc",
-    "start": "node./dist/server.js",
-    "postinstall": "prisma generate --schema=./prisma/schema"
+    "start": "node ./dist/server.js",
+    "db:generate": "prisma generate --schema=./prisma/schema",
+    "db:migrate": "prisma migrate --schema=./prisma/schema",
+    "db:push": "prisma db push --schema=./prisma/schema",
+    "db:pull": "prisma db pull --schema=./prisma/schema",
+    "db:studio": "prisma studio --schema=./prisma/schema",
+    "postinstall": "prisma generate --schema=./prisma/schema",
+    "stripe:webhook": "stripe listen --forward-to localhost:4000/webhook"
   },
   "dependencies": {
     "@prisma/client": "^6.16.3",
