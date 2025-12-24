@@ -14,6 +14,11 @@ router.get(
 );
 
 router.get(
+    '/statistics',
+    AdminController.getStatistics
+);
+
+router.get(
     '/:id',
     auth(UserRole.SUPER_ADMIN, UserRole.ADMIN),
     AdminController.getByIdFromDB

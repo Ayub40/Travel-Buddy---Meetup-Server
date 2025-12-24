@@ -21,14 +21,15 @@ router.get(
     userController.getDashboardData
 );
 
-router.get("/:id", userController.getSingleUser);
-
 router.get(
     '/me',
     auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.USER),
-    // userController.getMyProfile
-    userController.getMe
+    userController.getMyProfile
 )
+
+router.get("/:id", userController.getSingleUser);
+
+
 
 router.post(
     "/create-admin",

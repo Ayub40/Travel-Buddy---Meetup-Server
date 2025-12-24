@@ -88,7 +88,10 @@ const createUser = async (req: Request) => {
         });
 
         return createdUser;
-    });
+    }, {
+        timeout: 20000
+    }
+    );
 
     return result;
 };
@@ -184,104 +187,174 @@ const changeProfileStatus = async (id: string, payload: { role: UserRole }) => {
     return updatedUser;
 };
 
-const getMe = async (user: any) => {
-    const email =
-        user?.email ||
-        user?.payload?.email ||
-        user?.user?.email;
+// const getMe = async (user: any) => {
+//     const email =
+//         user?.email ||
+//         user?.payload?.email ||
+//         user?.user?.email;
 
-    // if (!user?.email) {
-    if (!email) {
-        throw new Error("Invalid user!");
-    }
+//     // if (!user?.email) {
+//     if (!email) {
+//         throw new Error("Invalid user!");
+//     }
 
-    const userData = await prisma.user.findUniqueOrThrow({
-        // where: { email: user.email },
-        // where: {
-        //     email: user.email || user?.payload?.email
-        // },
-        where: { email },
+//     const userData = await prisma.user.findUniqueOrThrow({
+//         // where: { email: user.email },
+//         // where: {
+//         //     email: user.email || user?.payload?.email
+//         // },
+//         where: { email },
+//         select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             role: true,
+//             status: true,
+//             needPasswordChange: true,
+
+//             profileImage: true,
+//             bio: true,
+//             age: true,
+//             gender: true,
+
+//             country: true,
+//             city: true,
+//             currentLocation: true,
+
+//             interests: true,
+//             visitedCountries: true,
+//             budgetRange: true,
+//             isVerified: true,
+
+//             createdAt: true,
+//             updatedAt: true,
+
+//             // Travel Plans Created by User
+//             travelPlans: {
+//                 select: {
+//                     id: true,
+//                     title: true,
+//                     destination: true,
+//                     country: true,
+//                     startDate: true,
+//                     endDate: true,
+//                     budget: true,
+//                     travelType: true,
+//                     visibility: true,
+//                     photos: true,
+//                     createdAt: true,
+//                     updatedAt: true,
+//                 }
+//             },
+
+//             // Reviews Given by User
+//             reviews: {
+//                 select: {
+//                     id: true,
+//                     travelPlanId: true,
+//                     rating: true,
+//                     comment: true,
+//                     createdAt: true
+//                 }
+//             },
+
+//             // Payments made by user
+//             payments: {
+//                 select: {
+//                     id: true,
+//                     amount: true,
+//                     currency: true,
+//                     status: true,
+//                     paymentFor: true,
+//                     planType: true,
+//                     method: true,
+//                     createdAt: true
+//                 }
+//             },
+
+//             // Join Requests made by user
+//             joinRequests: {
+//                 select: {
+//                     id: true,
+//                     travelPlanId: true,
+//                     status: true,
+//                     createdAt: true,
+//                 }
+//             }
+//         }
+//     });
+
+//     return userData;
+// };
+
+const getMyProfile = async (user: IAuthUser) => {
+    const userInfo = await prisma.user.findUniqueOrThrow({
+        where: {
+            email: user?.email,
+            status: UserStatus.ACTIVE,
+        },
         select: {
             id: true,
-            name: true,
             email: true,
+            needPasswordChange: true,
             role: true,
             status: true,
-            needPasswordChange: true,
-
-            profileImage: true,
-            bio: true,
-            age: true,
-            gender: true,
-
-            country: true,
-            city: true,
-            currentLocation: true,
-
-            interests: true,
-            visitedCountries: true,
-            budgetRange: true,
-            isVerified: true,
-
-            createdAt: true,
-            updatedAt: true,
-
-            // Travel Plans Created by User
-            travelPlans: {
-                select: {
-                    id: true,
-                    title: true,
-                    destination: true,
-                    country: true,
-                    startDate: true,
-                    endDate: true,
-                    budget: true,
-                    travelType: true,
-                    visibility: true,
-                    photos: true,
-                    createdAt: true,
-                    updatedAt: true,
-                }
-            },
-
-            // Reviews Given by User
-            reviews: {
-                select: {
-                    id: true,
-                    travelPlanId: true,
-                    rating: true,
-                    comment: true,
-                    createdAt: true
-                }
-            },
-
-            // Payments made by user
-            payments: {
-                select: {
-                    id: true,
-                    amount: true,
-                    currency: true,
-                    status: true,
-                    paymentFor: true,
-                    planType: true,
-                    method: true,
-                    createdAt: true
-                }
-            },
-
-            // Join Requests made by user
-            joinRequests: {
-                select: {
-                    id: true,
-                    travelPlanId: true,
-                    status: true,
-                    createdAt: true,
-                }
-            }
-        }
+        },
     });
 
-    return userData;
+    let profileInfo;
+
+    if (userInfo.role === UserRole.SUPER_ADMIN) {
+        profileInfo = await prisma.admin.findUnique({
+            where: {
+                email: userInfo.email,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                profilePhoto: true,
+                contactNumber: true,
+                isDeleted: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
+    } else if (userInfo.role === UserRole.ADMIN) {
+        profileInfo = await prisma.admin.findUnique({
+            where: {
+                email: userInfo.email,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                profilePhoto: true,
+                contactNumber: true,
+                isDeleted: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
+    } else if (userInfo.role === UserRole.USER) {
+        profileInfo = await prisma.admin.findUnique({
+            where: {
+                email: userInfo.email,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                profilePhoto: true,
+                contactNumber: true,
+                createdAt: true,
+                updatedAt: true,
+
+            },
+        });
+    }
+
+    return { ...userInfo, ...profileInfo };
 };
 
 const updateMyProfile = async (user: IAuthUser, req: Request) => {
@@ -676,7 +749,11 @@ export const sendJoinRequest = async (userEmail: string, travelPlanId: string) =
 export const updateJoinRequestStatus = async (requestId: string, status: 'ACCEPTED' | 'REJECTED') => {
     const updated = await prisma.tripJoinRequest.update({
         where: { id: requestId },
-        data: { status }
+        data: { status },
+        include: {
+            user: true,
+            travelPlan: true
+        }
     });
     return updated;
 };
@@ -709,39 +786,36 @@ const getUserById = async (id: string): Promise<IAuthUser | null> => {
     return result;
 };
 
-
 export const updateAdminServiceByEmail = async (email: string, payload: any) => {
-  // Ensure admin exists and is not soft-deleted
-  const admin = await prisma.admin.findFirst({
-    where: { email, isDeleted: false },
-  });
+    // Ensure admin exists and is not soft-deleted
+    const admin = await prisma.admin.findFirst({
+        where: { email, isDeleted: false },
+    });
 
-  if (!admin) {
-    throw new Error("Admin not found");
-  }
+    if (!admin) {
+        throw new Error("Admin not found");
+    }
 
-  // Update admin
-  const updated = await prisma.admin.update({
-    where: { id: admin.id }, // Prisma update needs id
-    data: {
-      name: payload.name,
-      contactNumber: payload.contactNumber,
-      profilePhoto: payload.profilePhoto,
-    },
-  });
+    // Update admin
+    const updated = await prisma.admin.update({
+        where: { id: admin.id }, // Prisma update needs id
+        data: {
+            name: payload.name,
+            contactNumber: payload.contactNumber,
+            profilePhoto: payload.profilePhoto,
+        },
+    });
 
-  return updated;
+    return updated;
 };
-
-
-
 
 export const userService = {
     createAdmin,
     createUser,
     getAllFromDB,
     changeProfileStatus,
-    getMe,
+    // getMe,
+    getMyProfile,
     updateMyProfile,
     softDeleteUser,
     hardDeleteUser,

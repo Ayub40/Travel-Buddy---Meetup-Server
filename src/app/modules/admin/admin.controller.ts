@@ -68,6 +68,16 @@ const softDeleteFromDB = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
+const getStatistics = catchAsync(async (req: Request, res: Response) => {
+    const result = await AdminService.getAppStatistics();
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "App statistics fetched successfully!",
+        data: result
+    });
+});
 
 
 export const AdminController = {
@@ -75,5 +85,6 @@ export const AdminController = {
     getByIdFromDB,
     updateIntoDB,
     deleteFromDB,
-    softDeleteFromDB
+    softDeleteFromDB,
+    getStatistics
 }

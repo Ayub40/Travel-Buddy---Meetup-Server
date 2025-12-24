@@ -62,17 +62,31 @@ const changeProfileStatus = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
-const getMe = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
+// const getMe = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
 
-    // const user = req.user;
+//     // const user = req.user;
 
 
-    // const result = await userService.getMyProfile(user as IAuthUser);
-    // const result = await userService.getMe(user as IAuthUser);
+//     // const result = await userService.getMyProfile(user as IAuthUser);
+//     // const result = await userService.getMe(user as IAuthUser);
 
-    if (!req.user?.email) throw new ApiError(401, "Unauthorized");
-    const result = await userService.getMe(req.user);
-    console.log("REQ.USER =>", req.user);
+//     if (!req.user?.email) throw new ApiError(401, "Unauthorized");
+//     const result = await userService.getMe(req.user);
+//     console.log("REQ.USER =>", req.user);
+
+//     sendResponse(res, {
+//         statusCode: httpStatus.OK,
+//         success: true,
+//         message: "My profile data fetched!",
+//         data: result
+//     })
+// });
+
+const getMyProfile = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
+
+    const user = req.user;
+
+    const result = await userService.getMyProfile(user as IAuthUser);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
@@ -244,7 +258,8 @@ export const updateAdminByEmail = async (req: Request, res: Response) => {
 export const userController = {
     createAdmin,
     createUser,
-    getMe,
+    // getMe,
+    getMyProfile,
     getAllFromDB,
     changeProfileStatus,
     updateMyProfile,
