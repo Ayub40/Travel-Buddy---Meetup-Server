@@ -154,124 +154,66 @@ const softDeleteFromDB = async (id: string): Promise<Admin | null> => {
     return result;
 }
 
-
-
 const getAppStatistics = async () => {
-
     const activeUsers = await prisma.user.count({
         where: {
             status: UserStatus.ACTIVE,
         },
     });
 
-
     const totalDestinations = await prisma.travelPlan.count();
-
 
     const groupsFormed = await prisma.tripJoinRequest.count({
         where: {
-            status: 'ACCEPTED', 
+            status: 'ACCEPTED',
         },
     });
-
 
     const uniqueCountries = await prisma.travelPlan.groupBy({
         by: ['country'],
     });
 
+    const activeUserImages = await prisma.user.findMany({
+        // where: { status: 'ACTIVE' },
+        where: {
+            status: 'ACTIVE',
+            profileImage: { not: null } 
+        },
+        take: 5,
+        select: { profileImage: true }
+    });
 
-    return [
-        { 
-            label: "Active Users", 
-            value: activeUsers, 
-            color: "bg-teal-50", 
-            text: "text-teal-600" 
-        },
-        { 
-            label: "Destinations", 
-            value: totalDestinations, 
-            color: "bg-pink-50", 
-            text: "text-pink-600" 
-        },
-        { 
-            label: "Groups Formed", 
-            value: groupsFormed, 
-            color: "bg-yellow-50", 
-            text: "text-yellow-600" 
-        },
-        { 
-            label: "Countries", 
-            value: uniqueCountries.length, 
-            color: "bg-red-50", 
-            text: "text-red-600" 
-        },
-    ];
+    return {
+        stats: [
+            {
+                label: "Active Users",
+                value: activeUsers,
+                color: "bg-teal-50",
+                text: "text-teal-600"
+            },
+            {
+                label: "Destinations",
+                value: totalDestinations,
+                color: "bg-pink-50",
+                text: "text-pink-600"
+            },
+            {
+                label: "Groups Formed",
+                value: groupsFormed,
+                color: "bg-yellow-50",
+                text: "text-yellow-600"
+            },
+            {
+                label: "Countries",
+                value: uniqueCountries.length,
+                color: "bg-red-50",
+                text: "text-red-600"
+            }
+        ],
+        activeUserImages: activeUserImages.map(u => u.profileImage)
+    };
 };
 
-
-// const getAppStatistics = async () => {
-
-//     const activeUsers = await prisma.user.count({
-//         where: { status: UserStatus.ACTIVE }
-//     });
-
-
-//     const totalDestinations = await prisma.travelPlan.count();
-
-
-//     const totalReviews = await prisma.review.count();
-
-
-//     const aggregateRating = await prisma.review.aggregate({
-//         _avg: {
-//             rating: true
-//         }
-//     });
-
-
-//     const countriesCount = await prisma.travelPlan.groupBy({
-//         by: ['country'],
-//         _count: {
-//             country: true
-//         }
-//     });
-
-
-//     const totalJoinRequests = await prisma.tripJoinRequest.count();
-
-//     return [
-//         {
-//             label: "Active Users",
-//             value: activeUsers,
-//             color: "bg-teal-50",
-//             text: "text-teal-600"
-//         },
-//         {
-//             label: "Total Trips",
-//             value: totalDestinations,
-//             color: "bg-pink-50",
-//             text: "text-pink-600"
-//         },
-//         {
-//             label: "Avg Rating",
-//             value: aggregateRating._avg.rating ? Number(aggregateRating._avg.rating.toFixed(1)) : 0,
-//             color: "bg-yellow-50",
-//             text: "text-yellow-600"
-//         },
-//         {
-//             label: "Countries",
-//             value: countriesCount.length,
-//             color: "bg-red-50",
-//             text: "text-red-600"
-//         },
-//         {
-//             label: "Join Requests",
-//             value: totalJoinRequests,
-//             color: "bg-blue-50",
-//             text: "text-blue-600"
-//         }
-//     ];
-// };
 
 export const AdminService = {
     getAllFromDB,
