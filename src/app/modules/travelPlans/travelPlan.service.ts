@@ -266,21 +266,6 @@ const matchTravelPlans = async (query: any) => {
     };
 };
 
-// const deleteTravelPlan = async (id: string, user: IAuthUser) => {
-//     if (!user?.email) throw new Error("User not found");
-
-//     const existing = await prisma.travelPlan.findUniqueOrThrow({
-//         where: { id }
-//     });
-
-//     await prisma.travelPlan.delete({
-//         where: { id }
-//     });
-
-//     return { message: "Travel plan deleted successfully" };
-// };
-
-
 const deleteTravelPlan = async (id: string, user: IAuthUser) => {
     if (!user?.email) throw new Error("User not found");
 
@@ -351,45 +336,6 @@ const getMyMatchCount = async (user: IAuthUser) => {
 
     return { totalMatches };
 };
-
-// const getMatchedTravelers = async (email: string) => {
-
-//     const user = await prisma.user.findUnique({
-//         where: { email },
-//         select: { id: true }
-//     });
-
-//     if (!user) throw new Error("User not found");
-
-//     const myPlans = await prisma.travelPlan.findMany({
-//         where: { userId: user.id, visibility: true },
-//         select: { destination: true, startDate: true, endDate: true },
-//     });
-
-//     const matchedTravelers: any[] = [];
-
-//     for (const plan of myPlans) {
-//         const matches = await prisma.travelPlan.findMany({
-//             where: {
-//                 destination: plan.destination,
-//                 startDate: plan.startDate,
-//                 endDate: plan.endDate,
-//                 userId: { not: user.id },
-//                 visibility: true,
-//             },
-//             select: {
-//                 id: true,
-//                 user: { select: { id: true, name: true, profileImage: true } },
-//                 destination: true,
-//                 startDate: true,
-//                 endDate: true,
-//             }
-//         });
-//         matchedTravelers.push(...matches);
-//     }
-
-//     return matchedTravelers;
-// };
 
 
 

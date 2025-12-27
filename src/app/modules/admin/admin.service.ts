@@ -177,7 +177,7 @@ const getAppStatistics = async () => {
         // where: { status: 'ACTIVE' },
         where: {
             status: 'ACTIVE',
-            profileImage: { not: null } 
+            profileImage: { not: null }
         },
         take: 5,
         select: { profileImage: true }
@@ -214,6 +214,38 @@ const getAppStatistics = async () => {
     };
 };
 
+const getAdminDashboardStats = async () => {
+    const [
+        totalUsers,
+        totalTravelPlans,
+        totalJoinRequests,
+        totalPayments,
+        totalReviews
+    ] = await Promise.all([
+        prisma.user.count(),
+        prisma.travelPlan.count(),
+        prisma.tripJoinRequest.count(),
+        prisma.payment.count(),
+        prisma.review.count()
+    ]);
+
+
+    const recentActivity = await prisma.travelPlan.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: { user: { select: { name: true } } }
+    });
+
+    return {
+        totalUsers,
+        totalTravelPlans,
+        totalJoinRequests,
+        totalPayments,
+        totalReviews,
+        recentActivity
+    };
+};
+
 
 export const AdminService = {
     getAllFromDB,
@@ -221,6 +253,7 @@ export const AdminService = {
     updateIntoDB,
     deleteFromDB,
     softDeleteFromDB,
-    getAppStatistics
+    getAppStatistics,
+    getAdminDashboardStats
 
 }
