@@ -5,6 +5,7 @@ import { createReviewZodSchema, updateReviewZodSchema } from "./review.validatio
 // import validateRequest from "../../middlewares/validateRequest";
 import { UserRole } from "@prisma/client";
 import validateRequest from "../../middlewares/validateRequest";
+// import { readOnly } from "../../middlewares/readOnly";
 
 const router = Router();
 
@@ -12,6 +13,7 @@ const router = Router();
 router.post(
     "/:travelPlanId",
     auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+ // readOnly(),
     validateRequest(createReviewZodSchema),
     reviewController.createReview
 );
@@ -21,6 +23,7 @@ router.post(
 router.patch(
     "/:reviewId",
     auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+ // readOnly(),
     validateRequest(updateReviewZodSchema),
     reviewController.updateReview
 );
@@ -30,6 +33,7 @@ router.delete(
     "/:reviewId",
     // auth("USER", "ADMIN"),
     auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+ // readOnly(),
     reviewController.deleteReview
 );
 
@@ -37,7 +41,9 @@ router.delete(
 router.get("/plan/:travelPlanId", reviewController.getReviewsByPlan);
 
 // Get logged-in user reviews (with average rating)
-router.get("/me", auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN), reviewController.getReviewsByUser);
+router.get("/me", auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+//  readOnly(), 
+ reviewController.getReviewsByUser);
 
 
 

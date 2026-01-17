@@ -3,6 +3,7 @@ import express from 'express';
 import auth from '../../middlewares/auth';
 // import { authLimiter } from '../../middlewares/rateLimiter';
 import { AuthController } from './auth.controller';
+// import { readOnly } from '../../middlewares/readOnly';
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.post(
         UserRole.ADMIN,
         UserRole.USER
     ),
+ // readOnly(),
     AuthController.changePassword
 );
 

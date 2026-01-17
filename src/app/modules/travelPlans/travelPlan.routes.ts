@@ -5,6 +5,7 @@ import { UserRole } from "@prisma/client";
 import { fileUploader } from "../../../helpers/fileUploader";
 import { travelPlanValidation } from "./travelPlan.validation";
 import validateRequest from "../../middlewares/validateRequest";
+// import { readOnly } from "../../middlewares/readOnly";
 
 const router = express.Router();
 
@@ -17,12 +18,14 @@ router.get("/match", travelPlanController.matchTravelPlans);
 router.get(
     "/my-travel-plan",
     auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+ // readOnly(),
     travelPlanController.getMyTravelPlans
 );
 
 router.get(
     "/my-match-count",
     auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+ // readOnly(),
     travelPlanController.getMyMatchCount
 );
 
@@ -40,6 +43,7 @@ router.get("/:id", travelPlanController.getTravelPlanById);
 router.post(
     '/',
     auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+ // readOnly(),
     fileUploader.upload.array('photos', 5),
     async (req: Request & { user?: any }, res: Response, next: NextFunction) => {
         // check if travelPlan is string
@@ -54,6 +58,7 @@ router.post(
 router.patch(
     "/update-travelPlan/:id",
     auth(UserRole.USER, UserRole.ADMIN, UserRole.SUPER_ADMIN),
+ // readOnly(),
     fileUploader.upload.array("photos"),
     travelPlanController.updateTravelPlan
 );

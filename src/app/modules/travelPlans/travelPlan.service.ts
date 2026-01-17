@@ -283,7 +283,6 @@ const deleteTravelPlan = async (id: string, user: IAuthUser) => {
     return { message: "Travel plan deleted successfully" };
 };
 
-
 // New Code
 const getMyTravelPlans = async (user: IAuthUser, options: IPaginationOptions) => {
     if (!user?.email) throw new Error("User not found");
