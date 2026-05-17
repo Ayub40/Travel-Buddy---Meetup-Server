@@ -62,26 +62,6 @@ const changeProfileStatus = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
-// const getMe = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
-
-//     // const user = req.user;
-
-
-//     // const result = await userService.getMyProfile(user as IAuthUser);
-//     // const result = await userService.getMe(user as IAuthUser);
-
-//     if (!req.user?.email) throw new ApiError(401, "Unauthorized");
-//     const result = await userService.getMe(req.user);
-//     console.log("REQ.USER =>", req.user);
-
-//     sendResponse(res, {
-//         statusCode: httpStatus.OK,
-//         success: true,
-//         message: "My profile data fetched!",
-//         data: result
-//     })
-// });
-
 const getMyProfile = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
 
     const user = req.user;
@@ -229,7 +209,7 @@ const getUserById = catchAsync(async (req, res) => {
 
 export const updateAdminByEmail = async (req: Request, res: Response) => {
     try {
-        const email = req.body.email; // frontend থেকে email পাঠানো হবে
+        const email = req.body.email; // send email from frontend
         const payload = req.body; // { name, contactNumber, profilePhoto }
 
         const updatedAdmin = await updateAdminServiceByEmail(email, payload);

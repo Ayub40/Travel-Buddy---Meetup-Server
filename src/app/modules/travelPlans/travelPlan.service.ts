@@ -54,24 +54,6 @@ const getAllTravelPlans = async (params: any, options: IPaginationOptions) => {
         });
     }
 
-    // Date range filter
-    // if (fromDate || toDate) {
-    //     const dateFilter: Prisma.TravelPlanWhereInput = {};
-
-    //     if (fromDate && toDate) {
-    //         dateFilter.startDate = {
-    //             gte: new Date(fromDate),
-    //             lte: new Date(toDate),
-    //         };
-    //     } else if (fromDate) {
-    //         dateFilter.startDate = { gte: new Date(fromDate) };
-    //     } else if (toDate) {
-    //         dateFilter.startDate = { lte: new Date(toDate) };
-    //     }
-
-    //     andConditions.push(dateFilter);
-    // }
-
     const whereConditions: Prisma.TravelPlanWhereInput = andConditions.length > 0 ? { AND: andConditions } : {};
 
     const travelPlans = await prisma.travelPlan.findMany({
@@ -129,9 +111,6 @@ const updateTravelPlan = async (
         where: { id },
     });
 
-    // if (existingPlan.userId !== userInfo.id) {
-    //     throw new Error("You are not authorized to update this travel plan!");
-    // }
 
     // Authorization: USER can update only their own plan
     if (existingPlan.userId !== userInfo.id && !["ADMIN", "SUPER_ADMIN"].includes(user.role)) {
@@ -156,10 +135,6 @@ const updateTravelPlan = async (
             files.map(f => fileUploader.uploadToCloudinary(f).then(u => u.secure_url))
         );
         existingPlan.photos = [...(existingPlan.photos || []), ...uploadedImages];
-        // existingPlan.photos = [
-        //     ...(existingPlan.photos || []),
-        //     ...uploadedImages
-        // ];
     }
 
     // -----------------------------
@@ -172,16 +147,7 @@ const updateTravelPlan = async (
 
     const allowedFields = ["title", "destination", "country", "budget", "description", "travelType", "visibility", "startDate", "endDate"];
     for (const field of allowedFields) {
-        // if (travelPlanData[field] !== undefined) {
-        //     if (field === "startDate" || field === "endDate") {
-        //         const dateValue = new Date(travelPlanData[field]);
-        //         if (!isNaN(dateValue.getTime())) {
-        //             updatedData[field] = dateValue;
-        //         }
-        //     } else {
-        //         updatedData[field] = travelPlanData[field];
-        //     }
-        // }
+  
         if (travelPlanData[field] !== undefined && travelPlanData[field] !== "") {
             updatedData[field] = field === "startDate" || field === "endDate"
                 ? new Date(travelPlanData[field])
@@ -215,24 +181,6 @@ const matchTravelPlans = async (query: any) => {
             [field]: { contains: String(query.searchTerm), mode: 'insensitive' }
         }));
     }
-
-    // Optional: filter by interests if passed from frontend
-    // if (query.interests) {
-    //     const interestsArray = Array.isArray(query.interests) ? query.interests : [query.interests];
-    //     filters.user = { interests: { hasSome: interestsArray } };
-    // }
-
-    // Exact date match (user selected startDate)
-    // if (query.startDate) {
-    //     const selectedDate = new Date(query.startDate);
-    //     const nextDay = new Date(selectedDate);
-    //     nextDay.setDate(selectedDate.getDate() + 1);
-
-    //     filters.startDate = {
-    //         gte: selectedDate, // greater than or equal to selected date
-    //         lt: nextDay         // less than next day → effectively exact date match
-    //     };
-    // }
 
     // Date range filter
     if (query.startDate || query.endDate) {

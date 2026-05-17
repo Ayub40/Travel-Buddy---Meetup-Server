@@ -135,22 +135,6 @@ const getMyMatchCount = catchAsync(async (req: Request & { user?: IAuthUser }, r
     });
 });
 
-// const getMyMatchedTravelers = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
-//     const user = req.user!;
-//     if (!user) throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated");
-
-//     const result = await travelPlanService.getMatchedTravelers(user.email); 
-
-//     sendResponse(res, {
-//         statusCode: httpStatus.OK,
-//         success: true,
-//         message: "Matched travelers fetched successfully",
-//         data: result,
-//     });
-// });
-
-
-
 export const travelPlanController = {
     createTravelPlan,
     getAllTravelPlans,

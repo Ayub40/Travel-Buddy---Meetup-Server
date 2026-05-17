@@ -27,21 +27,3 @@ export const userSearchAbleFields: string[] = [
     'currentLocation',
     'bio'
 ];
-
-// export const userSearchAbleFields: string[] = [
-//     'name',
-//     'email',
-//     'country',
-//     'city',
-//     'role',
-//     'status',
-//     'gender',
-//     'budgetRange',
-//     'interests',
-//     'visitedCountries',
-//     'budgetRange',
-//     'gender',
-//     'age',
-//     'currentLocation',
-//     'isVerified'
-// ];

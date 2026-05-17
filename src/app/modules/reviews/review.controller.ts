@@ -63,24 +63,6 @@ const deleteReview = catchAsync(
     }
 );
 
-// Get reviews by plan with average rating
-// const getReviewsByPlan = catchAsync(async (req: Request, res: Response) => {
-//     const { travelPlanId } = req.params;
-
-//     const result = await reviewService.getReviewsByPlan(travelPlanId);
-
-//     sendResponse(res, {
-//         statusCode: 200,
-//         success: true,
-//         message: "Reviews fetched successfully",
-//         data: result.reviews,
-//         meta: {
-//             averageRating: result.averageRating,
-//             totalReviews: result.reviews.length,
-//         },
-//     });
-// });
-
 const getReviewsByPlan = catchAsync(async (req: Request & { user?: IAuthUser }, res: Response) => {
     const { travelPlanId } = req.params;
     const userEmail = req.user?.email; // optional

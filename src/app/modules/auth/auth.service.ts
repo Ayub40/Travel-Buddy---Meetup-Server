@@ -261,43 +261,6 @@ const getMe = async (user: any) => {
 };
 
 
-// const getMe = async (user: any) => {
-//     const accessToken = user.accessToken;
-//     const decodedData = jwtHelpers.verifyToken(accessToken, config.jwt.jwt_secret as Secret);
-
-//     const userData = await prisma.user.findUniqueOrThrow({
-//         where: {
-//             email: decodedData.email,
-//             status: UserStatus.ACTIVE
-//         },
-//         select: {
-//             id: true,
-//             email: true,
-//             role: true,
-//             needPasswordChange: true,
-//             status: true,
-//             createdAt: true,
-//             updatedAt: true,
-//             admin: {
-//                 select: {
-//                     id: true,
-//                     name: true,
-//                     email: true,
-//                     profilePhoto: true,
-//                     contactNumber: true,
-//                     isDeleted: true,
-//                     createdAt: true,
-//                     updatedAt: true,
-//                 }
-//             },
-
-//         }
-//     });
-
-//     return userData;
-// }
-
-
 export const AuthServices = {
     loginUser,
     refreshToken,

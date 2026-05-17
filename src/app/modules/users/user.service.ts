@@ -86,18 +86,6 @@ const createUser = async (req: Request) => {
         data: userData
     });
 
-
-    // const result = await prisma.$transaction(async (tx) => {
-    //     const createdUser = await tx.user.create({
-    //         data: userData
-    //     });
-
-    //     return createdUser;
-    // }, {
-    //     timeout: 20000
-    // }
-    // );
-
     return result;
 };
 
@@ -192,75 +180,6 @@ const changeProfileStatus = async (id: string, payload: { role: UserRole }) => {
     return updatedUser;
 };
 
-// const getMyProfile = async (user: IAuthUser) => {
-//     const userInfo = await prisma.user.findUniqueOrThrow({
-//         where: {
-//             email: user?.email,
-//             status: UserStatus.ACTIVE,
-//         },
-//         select: {
-//             id: true,
-//             email: true,
-//             needPasswordChange: true,
-//             role: true,
-//             status: true,
-//         },
-//     });
-
-//     let profileInfo;
-
-//     if (userInfo.role === UserRole.SUPER_ADMIN) {
-//         profileInfo = await prisma.admin.findUnique({
-//             where: {
-//                 email: userInfo.email,
-//             },
-//             select: {
-//                 id: true,
-//                 name: true,
-//                 email: true,
-//                 profilePhoto: true,
-//                 contactNumber: true,
-//                 isDeleted: true,
-//                 createdAt: true,
-//                 updatedAt: true,
-//             },
-//         });
-//     } else if (userInfo.role === UserRole.ADMIN) {
-//         profileInfo = await prisma.admin.findUnique({
-//             where: {
-//                 email: userInfo.email,
-//             },
-//             select: {
-//                 id: true,
-//                 name: true,
-//                 email: true,
-//                 profilePhoto: true,
-//                 contactNumber: true,
-//                 isDeleted: true,
-//                 createdAt: true,
-//                 updatedAt: true,
-//             },
-//         });
-//     } else if (userInfo.role === UserRole.USER) {
-//         profileInfo = await prisma.admin.findUnique({
-//             where: {
-//                 email: userInfo.email,
-//             },
-//             select: {
-//                 id: true,
-//                 name: true,
-//                 email: true,
-//                 profilePhoto: true,
-//                 contactNumber: true,
-//                 createdAt: true,
-//                 updatedAt: true,
-
-//             },
-//         });
-//     }
-
-//     return { ...userInfo, ...profileInfo };
-// };
 
 const getMyProfile = async (user: IAuthUser) => {
     const userInfo = await prisma.user.findUniqueOrThrow({
@@ -286,104 +205,6 @@ const getMyProfile = async (user: IAuthUser) => {
     return userInfo;
 };
 
-// const updateMyProfile = async (user: IAuthUser, req: Request) => {
-//     const userInfo = await prisma.user.findUniqueOrThrow({
-//         where: {
-//             email: user?.email,
-//             status: UserStatus.ACTIVE
-//         }
-//     });
-
-//     const file = req.file;
-
-//     console.log("Uploaded file:", file); // 🔹 Debug
-
-//     if (file) {
-//         const uploadToCloudinary = await fileUploader.uploadToCloudinary(file);
-//         //  req.body.profileImage = uploaded?.secure_url; // USER
-//         console.log("Cloudinary result:", uploadToCloudinary); // 🔹 Debug
-
-//         if (userInfo.role === UserRole.USER) {
-//             // Ensure it's a string
-//             req.body.profileImage = typeof uploadToCloudinary === "string"
-//                 ? uploadToCloudinary
-//                 : uploadToCloudinary?.secure_url;
-//         } else {
-//             // Admin/SuperAdmin
-//             req.body.profilePhoto = typeof uploadToCloudinary === "string"
-//                 ? uploadToCloudinary
-//                 : uploadToCloudinary?.secure_url;
-//         }
-//     }
-
-//     console.log("Request body before update:", req.body); // 🔹 Debug
-
-//     let profileInfo;
-
-//     // Minor fix: parse 'data' field if it exists
-//     let updateData: any = { ...req.body };
-
-//     if (updateData.data && typeof updateData.data === "string") {
-//         try {
-//             const parsedData = JSON.parse(updateData.data);
-//             updateData = { ...updateData, ...parsedData };
-//             delete updateData.data;
-//         } catch (err) {
-//             console.log("JSON parse error:", err);
-//         }
-//     }
-
-//     // Ensure profileImage is a string
-//     if (updateData.profileImage && typeof updateData.profileImage !== "string") {
-//         updateData.profileImage = updateData.profileImage.secure_url || "";
-//     }
-
-//     // ===== NEW: Convert array fields from string to array if needed =====
-//     const arrayFields = ["interests", "visitedCountries"];
-//     arrayFields.forEach((field) => {
-//         if (updateData[field] && typeof updateData[field] === "string") {
-//             try {
-//                 updateData[field] = JSON.parse(updateData[field]);
-//             } catch (err) {
-//                 // fallback: split by comma
-//                 updateData[field] = updateData[field].split(",").map((item: string) => item.trim());
-//             }
-//         }
-//     });
-
-//     // ===== UPDATE Prisma =====
-//     if (userInfo.role === UserRole.SUPER_ADMIN || userInfo.role === UserRole.ADMIN) {
-//         profileInfo = await prisma.admin.update({
-//             where: { email: userInfo.email },
-//             // data: req.body
-//             data: updateData,
-//         });
-//     } else if (userInfo.role === UserRole.USER) {
-//         // Ensure profileImage is a string
-//         // const updateData = { ...req.body };
-//         // if (updateData.profileImage && typeof updateData.profileImage !== "string") {
-//         //     updateData.profileImage = updateData.profileImage.secure_url || "";
-//         // }
-
-//         const validData = {
-//             name: updateData.name,
-//             profileImage: updateData.profileImage,
-//             bio: updateData.bio,
-//             currentLocation: updateData.location || updateData.currentLocation,
-//             interests: updateData.interests,
-//             visitedCountries: updateData.visitedCountries
-//         };
-
-
-//         profileInfo = await prisma.user.update({
-//             where: { email: userInfo.email },
-//             // data: updateData
-//             data: validData
-//         });
-//     }
-
-//     return { ...profileInfo };
-// };
 
 const updateMyProfile = async (user: IAuthUser, req: Request) => {
     const userInfo = await prisma.user.findUniqueOrThrow({
@@ -502,22 +323,6 @@ const getSingleUserFromDB = async (id: string) => {
                 }
             },
 
-            // payments: {
-            //     select: {
-            //         id: true,
-            //         amount: true,
-            //         status: true,
-            //         planType: true,
-            //     }
-            // },
-
-            // joinRequests: {
-            //     select: {
-            //         id: true,
-            //         status: true,
-            //         travelPlanId: true,
-            //     }
-            // },
 
             createdAt: true,
             updatedAt: true,
@@ -539,7 +344,7 @@ const softDeleteUser = async (id: string) => {
         throw new ApiError(404, "User not found!");
     }
 
-    // ❗ Soft Delete → status = DELETED
+    //  Soft Delete → status = DELETED
     const result = await prisma.user.update({
         where: { id },
         data: {
@@ -577,7 +382,7 @@ export const getDashboardStats = async (userEmail: string) => {
         where: { email: userEmail },
         select: { id: true, name: true, profileImage: true }
     });
-    // console.log("🔥 All Users Image Check:", user);
+    // console.log(" All Users Image Check:", user);
     const userId = user.id;
 
     // Main Stats
@@ -593,12 +398,12 @@ export const getDashboardStats = async (userEmail: string) => {
     });
 
 
-    // 3️⃣ ✅ REAL MATCH COUNT (only ACCEPTED)
+    // 3. REAL MATCH COUNT (only ACCEPTED)
     // When:
     // - Someone sent request to my travel plan
     // - I accepted it
 
-    // 4️⃣ ✅ My outgoing join requests (Sabuj → Others)
+    // 4. My outgoing join requests (Sabuj → Others)
     const myJoinRequests = await prisma.tripJoinRequest.findMany({
         // where: { userId },
         where: {
@@ -634,7 +439,7 @@ export const getDashboardStats = async (userEmail: string) => {
         }
     });
 
-    // 5️⃣ ✅ Incoming accepted matches (Others → My trips)
+    // 5. Incoming accepted matches (Others → My trips)
     // const matchedCount = await prisma.tripJoinRequest.count({
     const matchedCount = await prisma.tripJoinRequest.findMany({
         where: {
